@@ -1,0 +1,9 @@
+# Core engine — no external dependencies needed
+# All analysis runs on Python standard library (re, json, xml, sqlite3, csv, datetime)
+
+# Optional — only needed for Signal message extraction:
+pycryptodome~=3.19.0    # AES-GCM/CTR decryption for Signal backups
+# pysqlcipher3~=1.2.0   # SQLCipher access for Signal Desktop DB (requires C compiler + sqlcipher headers)
+
+# Security — XML bomb / XXE protection:
+defusedxml~=0.7.1       # Safe XML parsing (prevents billion-laughs, XXE, entity expansion)

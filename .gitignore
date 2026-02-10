@@ -1,0 +1,37 @@
+# Data & output — never commit personal communication data
+cases/*/source_data/
+cases/*/output/
+*.xml
+*.sqlite
+*.db
+
+# Archived scripts (may contain residual PII)
+old_unused/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Build tools (large C++ repos)
+build_tools/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Signal keys — never commit decrypted keys
+*_key.json
+*_key.txt
+*decrypted*
+*.backup
+
+# Output reports that may contain PII
+ANALYSIS.md
+EVIDENCE.md
+TIMELINE.md
+DATA.json
+SIGNAL_MESSAGES.md
+AI_PROMPTS.md
