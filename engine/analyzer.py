@@ -939,8 +939,75 @@ def main(config_path: str = None):
     print(f"{'=' * 70}")
 
 
+_CONSENT_TEXT = """
+╔══════════════════════════════════════════════════════════════════════╗
+║                     IMPORTANT LEGAL NOTICE                         ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                    ║
+║  This tool analyzes personal communication data. Before running:   ║
+║                                                                    ║
+║  1. You must have LEGAL AUTHORITY to analyze this data.            ║
+║     (Your own messages, or data you have legal access to.)         ║
+║                                                                    ║
+║  2. This tool does NOT produce legally admissible evidence.        ║
+║     Output is probabilistic pattern detection, not forensic proof. ║
+║                                                                    ║
+║  3. Consult an attorney before relying on any analysis in legal    ║
+║     proceedings (custody, divorce, restraining orders, etc.).      ║
+║                                                                    ║
+║  4. Pattern detection can produce false positives and false        ║
+║     negatives. Always review flagged content in full context.      ║
+║                                                                    ║
+║  5. This is NOT a diagnostic tool and does NOT replace clinical    ║
+║     or legal professional advice.                                  ║
+║                                                                    ║
+╚══════════════════════════════════════════════════════════════════════╝
+"""
+
+
+def _check_consent(skip: bool = False) -> bool:
+    """Display legal notice and obtain user consent on first run.
+
+    Consent is stored in a .consent file in the project root so the
+    prompt only appears once. Pass skip=True (or --yes on CLI) to
+    bypass for automated/CI runs.
+    """
+    if skip:
+        return True
+
+    consent_file = os.path.join(os.path.dirname(__file__), '..', '.consent')
+    consent_file = os.path.realpath(consent_file)
+    if os.path.exists(consent_file):
+        return True
+
+    print(_CONSENT_TEXT)
+    try:
+        answer = input("Do you confirm you have legal authority to analyze "
+                       "this data? [y/N]: ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        print("\nAborted.")
+        return False
+
+    if answer in ('y', 'yes'):
+        try:
+            with open(consent_file, 'w') as f:
+                f.write(f"Consent given: {datetime.now().isoformat()}\n")
+        except OSError:
+            pass  # Non-critical — consent will be asked again next time
+        return True
+
+    print("\nYou must confirm consent before running the analysis.")
+    return False
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Communication Analysis Toolkit')
     parser.add_argument('--config', type=str, help='Path to case config.json')
+    parser.add_argument('--yes', '-y', action='store_true',
+                        help='Skip consent prompt (for automated/CI use)')
     args = parser.parse_args()
+
+    if not _check_consent(skip=args.yes):
+        sys.exit(1)
+
     main(args.config)
