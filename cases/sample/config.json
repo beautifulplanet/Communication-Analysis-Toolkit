@@ -1,0 +1,19 @@
+{
+    "case_name": "Sample Case",
+    "user_label": "User A",
+    "contact_label": "User B",
+    "contact_phone": "+1234567890",
+    "phone_suffix": "1234567890",
+
+    "sms_xml": "./cases/sample/source_data/sms_backup.xml",
+    "calls_xml": "./cases/sample/source_data/calls_backup.xml",
+    "signal_db": "",
+    "signal_sent_json": "",
+    "manual_signal_json": "",
+    "signal_desktop_json": "",
+    "csv_messages": "",
+
+    "output_dir": "./cases/sample/output",
+    "date_start": "2025-01-01",
+    "date_end": "2026-02-09"
+}
