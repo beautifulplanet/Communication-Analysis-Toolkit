@@ -1,0 +1,22 @@
+[
+  {"datetime": "2025-06-01 09:00:00", "direction": "sent", "body": "Good morning, how are you?"},
+  {"datetime": "2025-06-01 09:05:00", "direction": "received", "body": "I'm doing well, thanks!"},
+  {"datetime": "2025-06-01 12:00:00", "direction": "sent", "body": "Want to grab lunch?"},
+  {"datetime": "2025-06-01 12:05:00", "direction": "received", "body": "Sure! Where?"},
+  {"datetime": "2025-06-02 18:00:00", "direction": "received", "body": "I never said that"},
+  {"datetime": "2025-06-02 18:05:00", "direction": "received", "body": "You're imagining things up"},
+  {"datetime": "2025-06-02 18:10:00", "direction": "sent", "body": "Yes you did, I have the text"},
+  {"datetime": "2025-06-03 22:00:00", "direction": "received", "body": "No one will ever love you"},
+  {"datetime": "2025-06-04 08:00:00", "direction": "received", "body": "I'm sorry I was wrong"},
+  {"datetime": "2025-06-04 08:05:00", "direction": "sent", "body": "Thank you for apologizing"},
+  {"datetime": "2025-06-04 10:00:00", "direction": "sent", "body": "It's okay, let's move on"},
+  {"datetime": "2025-06-05 14:00:00", "direction": "sent", "body": "How was your day?"},
+  {"datetime": "2025-06-05 14:30:00", "direction": "received", "body": "Pretty good actually"},
+  {"datetime": "2025-06-05 20:00:00", "direction": "sent", "body": "Goodnight!"},
+  {"datetime": "2025-06-06 11:00:00", "direction": "received", "body": "lol that's hilarious"},
+  {"datetime": "2025-06-06 11:01:00", "direction": "sent", "body": "haha right?? 😂"},
+  {"datetime": "2025-06-06 11:02:00", "direction": "received", "body": "you're so dumb lmao"},
+  {"datetime": "2025-06-06 11:03:00", "direction": "sent", "body": "hahaha 😂"},
+  {"datetime": "2025-06-07 09:00:00", "direction": "received", "body": "you made me feel bad because of you"},
+  {"datetime": "2025-06-07 15:00:00", "direction": "received", "body": "after everything I've done for you"}
+]
