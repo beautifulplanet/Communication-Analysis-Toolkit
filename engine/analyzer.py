@@ -44,6 +44,16 @@ from engine.patterns import (
     PATTERN_DESCRIPTIONS,
     PATTERN_SEVERITY,
 )
+from engine.patterns_supportive import (
+    detect_supportive_patterns,
+    SUPPORTIVE_LABELS,
+    SUPPORTIVE_DESCRIPTIONS,
+    SUPPORTIVE_VALUE,
+)
+from engine.relationship_health import (
+    calculate_gottman_ratio,
+    calculate_health_score,
+)
 
 
 # ==============================================================================
@@ -368,6 +378,7 @@ def analyze_all(config: dict, all_texts: List[dict], all_calls: List[dict]) -> t
             'calls': {'incoming': 0, 'outgoing': 0, 'missed': 0, 'total_seconds': 0},
             'hurtful': {'from_user': [], 'from_contact': []},
             'patterns': {'from_user': [], 'from_contact': []},
+            'supportive': {'from_user': [], 'from_contact': []},
         }
         current += timedelta(days=1)
 
@@ -413,6 +424,22 @@ def analyze_all(config: dict, all_texts: List[dict], all_calls: List[dict]) -> t
                     days[d]['patterns']['from_user'].append(entry)
                 else:
                     days[d]['patterns']['from_contact'].append(entry)
+
+        # Supportive pattern detection
+        supportive_results = detect_supportive_patterns(msg.get('body', ''), msg['direction'])
+        if supportive_results:
+            for pattern_type, matched, full_msg in supportive_results:
+                entry = {
+                    'time': msg['time'],
+                    'pattern': pattern_type,
+                    'matched': matched,
+                    'message': (full_msg[:200] + '...') if len(full_msg) > 200 else full_msg,
+                    'source': msg.get('source', 'unknown'),
+                }
+                if msg['direction'] == 'sent':
+                    days[d]['supportive']['from_user'].append(entry)
+                else:
+                    days[d]['supportive']['from_contact'].append(entry)
 
     # Populate calls
     for call in all_calls:
@@ -960,6 +987,15 @@ _CONSENT_TEXT = """
 ║                                                                    ║
 ║  5. This is NOT a diagnostic tool and does NOT replace clinical    ║
 ║     or legal professional advice.                                  ║
+║                                                                    ║
+║  6. Supportive pattern scores analyze TEXT ONLY. Acts of service,  ║
+║     quality time, physical affection, and non-verbal cues are NOT  ║
+║     captured. A low supportive score does not mean support is      ║
+║     absent — it may be expressed through actions, not words.       ║
+║                                                                    ║
+║  7. "Supportive" text can be manipulative in context (e.g., love  ║
+║     bombing). "Negative" text can be reactive self-defense by a   ║
+║     victim. Context matters — always consult a professional.       ║
 ║                                                                    ║
 ╚══════════════════════════════════════════════════════════════════════╝
 """
