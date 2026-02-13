@@ -62,10 +62,10 @@ PATTERN CATEGORIES:
 """
 
 import re
-from typing import List, Tuple, Optional, Dict
+from typing import Optional
 
 # Type alias: (pattern_category, matched_text, full_message)
-PatternMatch = Tuple[str, str, str]
+PatternMatch = tuple[str, str, str]
 
 
 # ==============================================================================
@@ -73,79 +73,94 @@ PatternMatch = Tuple[str, str, str]
 # ==============================================================================
 
 # ── SEVERE: Personal attacks, weaponizing trauma, credible threats ──
-SEVERE_PATTERNS = [
+SEVERE_PATTERNS: list[tuple[str, str]] = [
     # Weaponizing deceased family members
-    (r'\bdead\s+(sissy|sister|brother|mom|dad|mother|father|baby|child)\b', 'weaponizing deceased family'),
-    (r'\b(at\s+least\s+)?my\s+\w+\s+isn.?t\s+dead\b', 'weaponizing death'),
-
+    (
+        r"\bdead\s+(sissy|sister|brother|mom|dad|mother|father|baby|child)\b",
+        "weaponizing deceased family",
+    ),
+    (r"\b(at\s+least\s+)?my\s+\w+\s+isn.?t\s+dead\b", "weaponizing death"),
     # Weaponizing health conditions
-    (r'\bhelpless\s+(little\s+)?baby\b', 'calling helpless baby'),
-    (r'\byou.?re\s+a\s+baby\b', 'calling a baby'),
-    (r'\bwon.?t\s+stop\s+drinking\b', 'weaponizing addiction'),
-    (r'\bleave\s+you\s+in\s+the\s+hospital\b', 'hospital abandonment threat'),
-    (r'\bnever\s+see\w*\s+you\s+again\b', 'permanent abandonment threat'),
-    (r'\b(seizure|cancer|tumor|disease|disorder|illness)\b.*\byour\s+fault\b', 'blaming for illness'),
-
+    (r"\bhelpless\s+(little\s+)?baby\b", "calling helpless baby"),
+    (r"\byou.?re\s+a\s+baby\b", "calling a baby"),
+    (r"\bwon.?t\s+stop\s+drinking\b", "weaponizing addiction"),
+    (r"\bleave\s+you\s+in\s+the\s+hospital\b", "hospital abandonment threat"),
+    (r"\bnever\s+see\w*\s+you\s+again\b", "permanent abandonment threat"),
+    (
+        r"\b(seizure|cancer|tumor|disease|disorder|illness)\b.*\byour\s+fault\b",
+        "blaming for illness",
+    ),
     # Direct threats
-    (r'\bi.?ll\s+(kill|hurt|destroy|ruin)\s+(you|your)\b', 'direct threat'),
-    (r'\byou.?ll\s+(regret|pay\s+for|be\s+sorry)\b', 'threat of retaliation'),
-    (r'\bi\s+will\s+make\s+your\s+life\b', 'threat to quality of life'),
-    (r'\bno\s+one\s+will\s+(ever\s+)?(love|want|care\s+about)\s+you\b', 'unlovability attack'),
-    (r'\byou\s+deserve\s+to\s+(suffer|be\s+alone|die|hurt)\b', 'wish of harm'),
-
+    (r"\bi.?ll\s+(kill|hurt|destroy|ruin)\s+(you|your)\b", "direct threat"),
+    (r"\byou.?ll\s+(regret|pay\s+for|be\s+sorry)\b", "threat of retaliation"),
+    (r"\bi\s+will\s+make\s+your\s+life\b", "threat to quality of life"),
+    (r"\bno\s+one\s+will\s+(ever\s+)?(love|want|care\s+about)\s+you\b", "unlovability attack"),
+    (r"\byou\s+deserve\s+to\s+(suffer|be\s+alone|die|hurt)\b", "wish of harm"),
     # Character assassination
-    (r'\byou\s+don.?t\s+care\s+about\s+(me|anyone|anything)\b', 'accusation of not caring'),
-    (r'\byou\s+fucked\s+up\b', 'blame statement'),
-    (r'\bi\s+don.?t\s+care\b.*\bbecause\b', 'weaponized indifference'),
-    (r'\bkeep\s+bringing\s+it\s+up\b.*\bover\s+and\s+over\b', 'stated looping intent'),
-    (r'\byou.?re\s+(worthless|nothing|garbage|trash|a\s+waste)\b', 'dehumanization'),
-    (r'\bnobody\s+(likes|loves|wants|cares\s+about)\s+you\b', 'social isolation attack'),
+    (r"\byou\s+don.?t\s+care\s+about\s+(me|anyone|anything)\b", "accusation of not caring"),
+    (r"\byou\s+fucked\s+up\b", "blame statement"),
+    (r"\bi\s+don.?t\s+care\b.*\bbecause\b", "weaponized indifference"),
+    (r"\bkeep\s+bringing\s+it\s+up\b.*\bover\s+and\s+over\b", "stated looping intent"),
+    (r"\byou.?re\s+(worthless|nothing|garbage|trash|a\s+waste)\b", "dehumanization"),
+    (r"\bnobody\s+(likes|loves|wants|cares\s+about)\s+you\b", "social isolation attack"),
 ]
 
 # ── MODERATE: Directed profanity and insults aimed at the person ──
-MODERATE_DIRECTED = [
+MODERATE_DIRECTED: list[tuple[str, Optional[str]]] = [
     # "you [are] [insult]" patterns
-    (r'\byou.?re\s+(so\s+)?(stupid|dumb|pathetic|useless|worthless|selfish|lazy|immature|childish|incompetent|ignorant|delusional|disgusting)\b', None),
-    (r'\byou\s+(stupid|dumb|pathetic|useless|worthless|selfish)\b', None),
-
+    (
+        r"\byou.?re\s+(so\s+)?(stupid|dumb|pathetic|useless|worthless|selfish|lazy|immature|childish|incompetent|ignorant|delusional|disgusting)\b",
+        None,
+    ),
+    (r"\byou\s+(stupid|dumb|pathetic|useless|worthless|selfish)\b", None),
     # Direct personal profanity
-    (r'\bfuck\s+you\b', 'fuck you'),
-    (r'\bscrew\s+you\b', 'screw you'),
-    (r'\bgo\s+to\s+hell\b', 'go to hell'),
-    (r'\beat\s+shit\b', 'eat shit'),
-
+    (r"\bfuck\s+you\b", "fuck you"),
+    (r"\bscrew\s+you\b", "screw you"),
+    (r"\bgo\s+to\s+hell\b", "go to hell"),
+    (r"\beat\s+shit\b", "eat shit"),
     # Name-calling
-    (r'\byou.?re\s+(an?\s+)?(idiot|moron|loser|narcissist|psycho|psychopath|sociopath|liar|bitch|asshole|piece\s+of\s+shit|cunt|bastard|whore|slut)\b', None),
-    (r'\byou\s+(piece\s+of|sack\s+of)\b', None),
-
+    (
+        r"\byou.?re\s+(an?\s+)?(idiot|moron|loser|narcissist|psycho|psychopath|sociopath|liar|bitch|asshole|piece\s+of\s+shit|cunt|bastard|whore|slut)\b",
+        None,
+    ),
+    (r"\byou\s+(piece\s+of|sack\s+of)\b", None),
     # Directed hostility
-    (r'\bshut\s+(the\s+fuck\s+)?up\b', 'shut up'),
-    (r'\bhate\s+you\b', 'hate you'),
-    (r'\bcan.?t\s+stand\s+you\b', "can't stand you"),
-    (r'\bsick\s+of\s+you\b', 'sick of you'),
-    (r'\bdisgusted\s+by\s+you\b', 'disgusted by you'),
-    (r'\bi\s+wish\s+i\s+never\s+met\s+you\b', 'wish never met'),
+    (r"\bshut\s+(the\s+fuck\s+)?up\b", "shut up"),
+    (r"\bhate\s+you\b", "hate you"),
+    (r"\bcan.?t\s+stand\s+you\b", "can't stand you"),
+    (r"\bsick\s+of\s+you\b", "sick of you"),
+    (r"\bdisgusted\s+by\s+you\b", "disgusted by you"),
+    (r"\bi\s+wish\s+i\s+never\s+met\s+you\b", "wish never met"),
 ]
 
 # ── MILD: Dismissive, contextual profanity in argument context ──
 MILD_PROFANITY_WORDS = [
-    'fuck', 'fucking', 'fucked', 'shit', 'shitty', 'bullshit',
-    'damn', 'dammit', 'crap', 'ass', 'hell',
+    "fuck",
+    "fucking",
+    "fucked",
+    "shit",
+    "shitty",
+    "bullshit",
+    "damn",
+    "dammit",
+    "crap",
+    "ass",
+    "hell",
 ]
 
-MILD_DISMISSIVE = [
-    (r'\bi\s+don.?t\s+care\b', "don't care"),
-    (r'\bleave\s+me\s+alone\b', 'leave me alone'),
-    (r'\bget\s+lost\b', 'get lost'),
-    (r'\bgo\s+away\b', 'go away'),
-    (r'\bwhatever\b', 'whatever'),
-    (r'\bi\s+don.?t\s+have\s+time\s+for\s+this\b', "don't have time"),
-    (r'\btalk\s+to\s+the\s+hand\b', 'talk to the hand'),
-    (r'\bi\s+don.?t\s+want\s+to\s+(hear|talk|discuss)\b', "don't want to discuss"),
+MILD_DISMISSIVE: list[tuple[str, str]] = [
+    (r"\bi\s+don.?t\s+care\b", "don't care"),
+    (r"\bleave\s+me\s+alone\b", "leave me alone"),
+    (r"\bget\s+lost\b", "get lost"),
+    (r"\bgo\s+away\b", "go away"),
+    (r"\bwhatever\b", "whatever"),
+    (r"\bi\s+don.?t\s+have\s+time\s+for\s+this\b", "don't have time"),
+    (r"\btalk\s+to\s+the\s+hand\b", "talk to the hand"),
+    (r"\bi\s+don.?t\s+want\s+to\s+(hear|talk|discuss)\b", "don't want to discuss"),
 ]
 
 
-def is_directed_hurtful(body: str, direction: str) -> Tuple[bool, List[str], Optional[str]]:
+def is_directed_hurtful(body: str, direction: str) -> tuple[bool, list[str], Optional[str]]:
     """
     Detect hurtful language directed AT a person, not casual usage.
 
@@ -166,38 +181,39 @@ def is_directed_hurtful(body: str, direction: str) -> Tuple[bool, List[str], Opt
     severity = None
 
     # ── SEVERE ──
-    for pattern, label in SEVERE_PATTERNS:
-        if re.search(pattern, lower):
-            found_words.append(label)
-            severity = 'severe'
+    for sev_pattern, sev_label in SEVERE_PATTERNS:
+        if re.search(sev_pattern, lower):
+            found_words.append(sev_label)
+            severity = "severe"
 
     # ── MODERATE ──
-    for pattern, label in MODERATE_DIRECTED:
-        if re.search(pattern, lower):
-            match_text = label or re.search(pattern, lower).group()
+    for mod_pattern, mod_label in MODERATE_DIRECTED:
+        if re.search(mod_pattern, lower):
+            m = re.search(mod_pattern, lower)
+            match_text = mod_label or (m.group() if m else "unknown")
             if match_text not in found_words:
                 found_words.append(match_text)
-            if severity != 'severe':
-                severity = 'moderate'
+            if severity != "severe":
+                severity = "moderate"
 
     # ── MILD: Profanity in argument context (directed at "you") ──
     for word in MILD_PROFANITY_WORDS:
-        if re.search(r'\b' + word + r'\b', lower):
-            sentences = re.split(r'[.!?]+', lower)
+        if re.search(r"\b" + word + r"\b", lower):
+            sentences = re.split(r"[.!?]+", lower)
             for sent in sentences:
-                if word in sent and ('you' in sent or 'your' in sent):
+                if word in sent and ("you" in sent or "your" in sent):
                     if word not in found_words:
                         found_words.append(word)
                     if severity is None:
-                        severity = 'mild'
+                        severity = "mild"
 
     # ── MILD: Dismissive patterns ──
-    for pattern, label in MILD_DISMISSIVE:
-        if re.search(pattern, lower):
-            if label not in found_words:
-                found_words.append(label)
+    for mild_pattern, mild_label in MILD_DISMISSIVE:
+        if re.search(mild_pattern, lower):
+            if mild_label not in found_words:
+                found_words.append(mild_label)
             if severity is None:
-                severity = 'mild'
+                severity = "mild"
 
     if found_words:
         return True, found_words, severity
@@ -224,12 +240,45 @@ DENY_PATTERNS = [
 
 # Attack — Turning it around to attack the other person
 ATTACK_PATTERNS = [
-    (r"you\s+always\s+\w+", lambda m: any(w in m.group() for w in
-        ['ruin', 'mess', 'blame', 'complain', 'make', 'start', 'do this',
-         'overreact', 'twist', 'lie', 'destroy', 'sabotage', 'cause'])),
-    (r"you\s+never\s+\w+", lambda m: any(w in m.group() for w in
-        ['listen', 'care', 'help', 'try', 'change', 'do anything',
-         'learn', 'understand', 'apologize', 'admit'])),
+    (
+        r"you\s+always\s+\w+",
+        lambda m: any(
+            w in m.group()
+            for w in [
+                "ruin",
+                "mess",
+                "blame",
+                "complain",
+                "make",
+                "start",
+                "do this",
+                "overreact",
+                "twist",
+                "lie",
+                "destroy",
+                "sabotage",
+                "cause",
+            ]
+        ),
+    ),
+    (
+        r"you\s+never\s+\w+",
+        lambda m: any(
+            w in m.group()
+            for w in [
+                "listen",
+                "care",
+                "help",
+                "try",
+                "change",
+                "do anything",
+                "learn",
+                "understand",
+                "apologize",
+                "admit",
+            ]
+        ),
+    ),
     (r"your\s+fault", None),
     (r"you.?re\s+the\s+(one|problem|reason)", None),
     (r"what\s+about\s+(when\s+)?you", None),
@@ -267,7 +316,6 @@ GASLIGHTING_PATTERNS = [
     r"you.?re\s+(imagining|making)\s+(things|that|it)\s+up",
     r"you.?re\s+remembering\s+(it\s+)?wrong",
     r"that.?s\s+not\s+what\s+(happened|i\s+said|i\s+meant)",
-
     # Sanity questioning
     r"you.?re\s+(crazy|insane|delusional|paranoid|losing\s+it|losing\s+your\s+mind|unhinged|unstable|mental|nuts)",
     r"you\s+(seriously\s+)?need\s+(help|therapy|medication|a\s+doctor|professional\s+help)\s+(because|you.?re|,\s+you)",  # only when used as attack, not genuine suggestion
@@ -275,14 +323,12 @@ GASLIGHTING_PATTERNS = [
     r"you.?re\s+the\s+only\s+one\s+who\s+thinks\s+that",
     r"something\s+is\s+(wrong|off)\s+with\s+you",
     r"are\s+you\s+sure\s+about\s+that\s*\?",  # patronizing questioning (not "are you ok")
-
     # Sensitivity shaming
     r"you.?re\s+too\s+sensitive",
     r"you.?re\s+(overreacting|being\s+dramatic|being\s+emotional|blowing\s+it\s+out)",
     r"stop\s+being\s+(so\s+)?(dramatic|sensitive|emotional|crazy|hysterical)",
     r"you\s+always\s+twist\s+(things|everything|my\s+words)",
     r"you\s+took\s+it\s+(the\s+)?wrong\s+way",
-
     # Joke deflection
     r"i\s+was\s+just\s+joking",
     r"can.?t\s+you\s+take\s+a\s+joke",
@@ -290,7 +336,6 @@ GASLIGHTING_PATTERNS = [
     r"you\s+can.?t\s+take\s+a\s+(joke|compliment)",
     r"lighten\s+up",
     r"relax,?\s+it\s+was\s+(just\s+)?a\s+joke",
-
     # Social consensus weaponizing
     r"no\s+one\s+(else\s+)?(thinks|would\s+think|agrees\s+with\s+you)",
     r"everyone\s+(thinks|knows|says|agrees)\s+(you.?re|you\s+are|that\s+you)",
@@ -614,11 +659,18 @@ def is_apology(body: str) -> bool:
         return False
     lower = body.lower()
     apology_markers = [
-        r'\b(i.?m |im |i am )?(really |so |truly |very )?(sorry|apologize|apologise)\b',
-        r'\bmy bad\b', r'\bmy fault\b', r'\bi was wrong\b', r'\bi shouldn.?t have\b',
-        r'\bi should have\b', r'\bforgive me\b', r'\bplease.*chance\b',
-        r'\bi.?ll (do |try |be )better\b', r'\bi (messed|screwed|fucked) up\b',
-        r'\byou.?re right\b', r'\byou were right\b',
+        r"\b(i.?m |im |i am )?(really |so |truly |very )?(sorry|apologize|apologise)\b",
+        r"\bmy bad\b",
+        r"\bmy fault\b",
+        r"\bi was wrong\b",
+        r"\bi shouldn.?t have\b",
+        r"\bi should have\b",
+        r"\bforgive me\b",
+        r"\bplease.*chance\b",
+        r"\bi.?ll (do |try |be )better\b",
+        r"\bi (messed|screwed|fucked) up\b",
+        r"\byou.?re right\b",
+        r"\byou were right\b",
     ]
     return any(re.search(pat, lower) for pat in apology_markers)
 
@@ -629,10 +681,12 @@ def is_self_directed(body: str) -> bool:
         return False
     lower = body.lower()
     self_patterns = [
-        r'\bi.?m\s+(a |an |such a |the )?(shit|ass|idiot|stupid|terrible|worst|bad|awful|mess)',
-        r'\bi\s+(suck|hate myself|messed up|screwed up|fucked up)\b',
-        r'\bi\s+should\s+(shut up|stop|have)\b',
-        r'\bmy fault\b', r'\bmy bad\b', r'\bi was wrong\b',
+        r"\bi.?m\s+(a |an |such a |the )?(shit|ass|idiot|stupid|terrible|worst|bad|awful|mess)",
+        r"\bi\s+(suck|hate myself|messed up|screwed up|fucked up)\b",
+        r"\bi\s+should\s+(shut up|stop|have)\b",
+        r"\bmy fault\b",
+        r"\bmy bad\b",
+        r"\bi was wrong\b",
     ]
     return any(re.search(pat, lower) for pat in self_patterns)
 
@@ -643,10 +697,10 @@ def is_third_party_venting(body: str) -> bool:
         return False
     lower = body.lower()
     third_party = [
-        r'\b(my |the )?(worker|boss|client|customer|employee|coworker|colleague|manager|contractor|guy|tenant)\b',
-        r'\b(this |that |the )?(job|work|company|business|office|site)\b.*\b(sucks?|terrible|awful|shit|fuck|annoying|ridiculous)\b',
-        r'\b(my |the )?(car|truck|phone|computer|laptop)\b.*\b(broke|dead|fucked|shit)\b',
-        r'\b(traffic|weather|subway|train|bus)\b.*\b(sucks?|awful|terrible|shit|fuck)\b',
+        r"\b(my |the )?(worker|boss|client|customer|employee|coworker|colleague|manager|contractor|guy|tenant)\b",
+        r"\b(this |that |the )?(job|work|company|business|office|site)\b.*\b(sucks?|terrible|awful|shit|fuck|annoying|ridiculous)\b",
+        r"\b(my |the )?(car|truck|phone|computer|laptop)\b.*\b(broke|dead|fucked|shit)\b",
+        r"\b(traffic|weather|subway|train|bus)\b.*\b(sucks?|awful|terrible|shit|fuck)\b",
     ]
     return any(re.search(pat, lower) for pat in third_party)
 
@@ -657,16 +711,16 @@ def is_de_escalation(body: str) -> bool:
         return False
     lower = body.lower()
     de_esc = [
-        r'\b(let.?s |can we |we should )(stop|calm|relax|chill|drop it|move on|not fight|not argue)\b',
-        r'\b(please |just )?(calm down|stop fighting|stop arguing|stop this|enough)\b',
-        r'\bcan we (just |please )?(talk|discuss) (calmly|nicely|like adults|normally)\b',
-        r'\bi don.?t want to (fight|argue)\b',
-        r'\blet.?s not (fight|argue|do this)\b',
-        r'\bcan we (move on|move past|drop)\b',
-        r'\bi.?m (trying to|not trying to)\s*(fight|argue|upset you|make you mad)\b',
-        r'\bi need (a |some )?(space|break|minute|time)\b',
-        r'\bplease stop\b',
-        r'\blet.?s just\b.*\b(tomorrow|later|another time|sleep|rest)\b',
+        r"\b(let.?s |can we |we should )(stop|calm|relax|chill|drop it|move on|not fight|not argue)\b",
+        r"\b(please |just )?(calm down|stop fighting|stop arguing|stop this|enough)\b",
+        r"\bcan we (just |please )?(talk|discuss) (calmly|nicely|like adults|normally)\b",
+        r"\bi don.?t want to (fight|argue)\b",
+        r"\blet.?s not (fight|argue|do this)\b",
+        r"\bcan we (move on|move past|drop)\b",
+        r"\bi.?m (trying to|not trying to)\s*(fight|argue|upset you|make you mad)\b",
+        r"\bi need (a |some )?(space|break|minute|time)\b",
+        r"\bplease stop\b",
+        r"\blet.?s just\b.*\b(tomorrow|later|another time|sleep|rest)\b",
     ]
     return any(re.search(pat, lower) for pat in de_esc)
 
@@ -681,19 +735,19 @@ def is_expressing_hurt(body: str) -> bool:
         return False
     lower = body.lower()
     hurt_patterns = [
-        r'\b(sounds like|feels like|seems like)\s+you\s+(don.?t|do not|doesn.?t)\s*(want|wanna|care|like|love|miss)',
-        r'\byou\s+(don.?t|do not)\s+(want to|wanna)\s+(see|be with|talk to|hang out|spend time)',
-        r'\byou\s+(don.?t|do not)\s+(want|wanna)\s+me\b',
-        r'\byou\s+(don.?t|do not)\s+(miss|need|love)\s+me\b',
-        r'\bi\s+(miss|love|need)\s+you\b',
-        r'\bthis\s+(sucks|hurts|isn.?t fair|is hard)\b',
-        r'\bi\s+(don.?t|do not)\s+know\s+what\s+to\s+(do|say)\b',
-        r'\bwhat\s+(am|do)\s+i\s+supposed\s+to\b',
-        r'\bi\s+(don.?t|do not)\s+want(a|\s+to)\s+(argue|fight|lose|bother|upset)\b',
-        r'\bare\s+you\s+(dumping|breaking|leaving|done with)\b',
-        r'\bplease\s+(don.?t|do not)\s+(dump|leave|break up|go)\b',
-        r'\bi\s+hope\s+you.?(re|\s+are)\s+ok\b',
-        r'\bidk\s+what\s+to\s+(say|do)\b',
+        r"\b(sounds like|feels like|seems like)\s+you\s+(don.?t|do not|doesn.?t)\s*(want|wanna|care|like|love|miss)",
+        r"\byou\s+(don.?t|do not)\s+(want to|wanna)\s+(see|be with|talk to|hang out|spend time)",
+        r"\byou\s+(don.?t|do not)\s+(want|wanna)\s+me\b",
+        r"\byou\s+(don.?t|do not)\s+(miss|need|love)\s+me\b",
+        r"\bi\s+(miss|love|need)\s+you\b",
+        r"\bthis\s+(sucks|hurts|isn.?t fair|is hard)\b",
+        r"\bi\s+(don.?t|do not)\s+know\s+what\s+to\s+(do|say)\b",
+        r"\bwhat\s+(am|do)\s+i\s+supposed\s+to\b",
+        r"\bi\s+(don.?t|do not)\s+want(a|\s+to)\s+(argue|fight|lose|bother|upset)\b",
+        r"\bare\s+you\s+(dumping|breaking|leaving|done with)\b",
+        r"\bplease\s+(don.?t|do not)\s+(dump|leave|break up|go)\b",
+        r"\bi\s+hope\s+you.?(re|\s+are)\s+ok\b",
+        r"\bidk\s+what\s+to\s+(say|do)\b",
     ]
     return any(re.search(pat, lower) for pat in hurt_patterns)
 
@@ -704,17 +758,17 @@ def is_joke_context(msg_idx: int, all_msgs: list, window: int = 3) -> bool:
     Returns True if laughter/playful signals are nearby (2+ in window).
     """
     joke_signals = [
-        r'(?:\b(?:lol|lmao|lmfao|haha+|rofl)\b|😂|🤣|😆|😹|💀)',
-        r'^(?:lol|haha|lmao|😂)$',
-        r'(?:\b(?:jk|just kidding|joking|kidding)\b)',
-        r'(?:🤪|😜|😝|🤡|😏|😈|🙃)',
+        r"(?:\b(?:lol|lmao|lmfao|haha+|rofl)\b|😂|🤣|😆|😹|💀)",
+        r"^(?:lol|haha|lmao|😂)$",
+        r"(?:\b(?:jk|just kidding|joking|kidding)\b)",
+        r"(?:🤪|😜|😝|🤡|😏|😈|🙃)",
     ]
     start = max(0, msg_idx - window)
     end = min(len(all_msgs), msg_idx + window + 1)
 
     laugh_count = 0
     for i in range(start, end):
-        body = (all_msgs[i].get('body', '') or '').lower()
+        body = (all_msgs[i].get("body", "") or "").lower()
         for pat in joke_signals:
             if re.search(pat, body):
                 laugh_count += 1
@@ -730,15 +784,15 @@ def is_banter(msg_idx: int, all_msgs: list, window: int = 4) -> bool:
     """
     start = max(0, msg_idx - window)
     end = min(len(all_msgs), msg_idx + window + 1)
-    banter_words = r'(?:\b(?:lol|lmao|haha+|omg|bruh|bro|dude)\b|😂|🤣|💀|😭|😆)'
+    banter_words = r"(?:\b(?:lol|lmao|haha+|omg|bruh|bro|dude)\b|😂|🤣|💀|😭|😆)"
 
     sent_laughing = False
     recv_laughing = False
     for i in range(start, end):
         m = all_msgs[i]
-        body = (m.get('body', '') or '').lower()
+        body = (m.get("body", "") or "").lower()
         if re.search(banter_words, body):
-            if m.get('direction') == 'sent':
+            if m.get("direction") == "sent":
                 sent_laughing = True
             else:
                 recv_laughing = True
@@ -750,12 +804,13 @@ def is_banter(msg_idx: int, all_msgs: list, window: int = 4) -> bool:
 # SECTION 7: UNIFIED DETECTION ENGINE
 # ==============================================================================
 
+
 def detect_patterns(
     body: str,
     direction: str,
     msg_idx: int = -1,
     all_msgs: Optional[list] = None,
-) -> List[PatternMatch]:
+) -> list[PatternMatch]:
     """
     Run all pattern detection categories against a message with optional
     context-aware filtering to reduce false positives.
@@ -773,7 +828,7 @@ def detect_patterns(
         return []
 
     lower = body.lower().strip()
-    results: List[PatternMatch] = []
+    results: list[PatternMatch] = []
 
     # --- Context filters (computed once per message) ---
     _apology = is_apology(body)
@@ -793,9 +848,16 @@ def detect_patterns(
     # High-severity categories (control, gaslighting, weaponize_family,
     # emotional_blackmail, etc.) are NEVER skipped.
     MILD_SKIP_CATEGORIES = {
-        'defensiveness', 'stonewalling', 'deflection', 'minimizing',
-        'catastrophizing', 'demand_compliance', 'criticism',
-        'guilt_trip', 'silent_treatment', 'selective_memory',
+        "defensiveness",
+        "stonewalling",
+        "deflection",
+        "minimizing",
+        "catastrophizing",
+        "demand_compliance",
+        "criticism",
+        "guilt_trip",
+        "silent_treatment",
+        "selective_memory",
     }
 
     def _skip_mild(category: str) -> bool:
@@ -828,41 +890,41 @@ def detect_patterns(
                     results.append((category, m.group(), body))
 
     # ── Core DARVO ──
-    run_simple(DENY_PATTERNS, 'deny')
-    run_validated(ATTACK_PATTERNS, 'attack')
-    run_simple(REVERSE_VICTIM_PATTERNS, 'reverse_victim')
+    run_simple(DENY_PATTERNS, "deny")
+    run_validated(ATTACK_PATTERNS, "attack")
+    run_simple(REVERSE_VICTIM_PATTERNS, "reverse_victim")
 
     # ── Gaslighting ──
-    run_simple(GASLIGHTING_PATTERNS, 'gaslighting')
+    run_simple(GASLIGHTING_PATTERNS, "gaslighting")
 
     # ── Gottman's Four Horsemen ──
-    run_simple(CRITICISM_PATTERNS, 'criticism')
-    run_simple(CONTEMPT_PATTERNS, 'contempt')
-    run_simple(DEFENSIVENESS_PATTERNS, 'defensiveness')
-    run_simple(STONEWALLING_PATTERNS, 'stonewalling')
+    run_simple(CRITICISM_PATTERNS, "criticism")
+    run_simple(CONTEMPT_PATTERNS, "contempt")
+    run_simple(DEFENSIVENESS_PATTERNS, "defensiveness")
+    run_simple(STONEWALLING_PATTERNS, "stonewalling")
 
     # ── Coercive Control ──
-    run_simple(CONTROL_PATTERNS, 'control')
-    run_simple(FINANCIAL_CONTROL_PATTERNS, 'financial_control')
-    run_simple(WEAPONIZE_FAMILY_PATTERNS, 'weaponize_family')
+    run_simple(CONTROL_PATTERNS, "control")
+    run_simple(FINANCIAL_CONTROL_PATTERNS, "financial_control")
+    run_simple(WEAPONIZE_FAMILY_PATTERNS, "weaponize_family")
 
     # ── Extended Manipulation ──
-    run_simple(GUILT_TRIP_PATTERNS, 'guilt_trip')
-    run_simple(DEFLECTION_PATTERNS, 'deflection')
-    run_simple(ULTIMATUM_PATTERNS, 'ultimatum')
-    run_simple(LOOPING_PATTERNS, 'looping')
-    run_simple(LYING_INDICATOR_PATTERNS, 'lying_indicator')
-    run_simple(MINIMIZING_PATTERNS, 'minimizing')
-    run_simple(LOVE_BOMBING_PATTERNS, 'love_bombing')
-    run_simple(FUTURE_FAKING_PATTERNS, 'future_faking')
-    run_simple(TRIANGULATION_PATTERNS, 'triangulation')
-    run_simple(EMOTIONAL_BLACKMAIL_PATTERNS, 'emotional_blackmail')
-    run_simple(SILENT_TREATMENT_PATTERNS, 'silent_treatment')
-    run_simple(DOUBLE_BIND_PATTERNS, 'double_bind')
-    run_simple(PRANK_TEST_PATTERNS, 'prank_test')
-    run_simple(SELECTIVE_MEMORY_PATTERNS, 'selective_memory')
-    run_simple(CATASTROPHIZING_PATTERNS, 'catastrophizing')
-    run_simple(DEMAND_COMPLIANCE_PATTERNS, 'demand_compliance')
+    run_simple(GUILT_TRIP_PATTERNS, "guilt_trip")
+    run_simple(DEFLECTION_PATTERNS, "deflection")
+    run_simple(ULTIMATUM_PATTERNS, "ultimatum")
+    run_simple(LOOPING_PATTERNS, "looping")
+    run_simple(LYING_INDICATOR_PATTERNS, "lying_indicator")
+    run_simple(MINIMIZING_PATTERNS, "minimizing")
+    run_simple(LOVE_BOMBING_PATTERNS, "love_bombing")
+    run_simple(FUTURE_FAKING_PATTERNS, "future_faking")
+    run_simple(TRIANGULATION_PATTERNS, "triangulation")
+    run_simple(EMOTIONAL_BLACKMAIL_PATTERNS, "emotional_blackmail")
+    run_simple(SILENT_TREATMENT_PATTERNS, "silent_treatment")
+    run_simple(DOUBLE_BIND_PATTERNS, "double_bind")
+    run_simple(PRANK_TEST_PATTERNS, "prank_test")
+    run_simple(SELECTIVE_MEMORY_PATTERNS, "selective_memory")
+    run_simple(CATASTROPHIZING_PATTERNS, "catastrophizing")
+    run_simple(DEMAND_COMPLIANCE_PATTERNS, "demand_compliance")
 
     return results
 
@@ -871,102 +933,98 @@ def detect_patterns(
 # SECTION 8: PATTERN METADATA (for reports and UI)
 # ==============================================================================
 
-PATTERN_LABELS: Dict[str, str] = {
+PATTERN_LABELS: dict[str, str] = {
     # Core DARVO
-    'deny':                 '🚫 Denial (DARVO)',
-    'attack':               '⚔️ Attack (DARVO)',
-    'reverse_victim':       '🔄 Reverse Victim & Offender (DARVO)',
-
+    "deny": "🚫 Denial (DARVO)",
+    "attack": "⚔️ Attack (DARVO)",
+    "reverse_victim": "🔄 Reverse Victim & Offender (DARVO)",
     # Gaslighting
-    'gaslighting':          '🌀 Gaslighting',
-
+    "gaslighting": "🌀 Gaslighting",
     # Gottman's Four Horsemen
-    'criticism':            '🗡️ Criticism (Gottman)',
-    'contempt':             '😤 Contempt (Gottman)',
-    'defensiveness':        '🛡️ Defensiveness (Gottman)',
-    'stonewalling':         '🧱 Stonewalling (Gottman)',
-
+    "criticism": "🗡️ Criticism (Gottman)",
+    "contempt": "😤 Contempt (Gottman)",
+    "defensiveness": "🛡️ Defensiveness (Gottman)",
+    "stonewalling": "🧱 Stonewalling (Gottman)",
     # Coercive Control
-    'control':              '🔒 Control & Isolation',
-    'financial_control':    '💰 Financial Control',
-    'weaponize_family':     '💀 Weaponizing Family/Health',
-
+    "control": "🔒 Control & Isolation",
+    "financial_control": "💰 Financial Control",
+    "weaponize_family": "💀 Weaponizing Family/Health",
     # Extended Manipulation
-    'guilt_trip':           '😢 Guilt Trip',
-    'deflection':           '↩️ Deflection',
-    'ultimatum':            '⚡ Ultimatums & Threats',
-    'looping':              '🔁 Looping / Interrogation',
-    'lying_indicator':      '🤥 Lying Indicators',
-    'minimizing':           '📉 Minimizing',
-    'love_bombing':         '💣 Love Bombing',
-    'future_faking':        '🔮 Future Faking',
-    'triangulation':        '📐 Triangulation',
-    'emotional_blackmail':  '🖤 Emotional Blackmail',
-    'silent_treatment':     '🤐 Silent Treatment Threat',
-    'double_bind':          '♾️ Double Bind',
-    'prank_test':           '🎭 Prank / Testing Reactions',
-    'selective_memory':     '🧠 Selective Memory / Trickle Truth',
-    'catastrophizing':      '🌪️ Catastrophizing',
-    'demand_compliance':    '📋 Demand for Compliance',
+    "guilt_trip": "😢 Guilt Trip",
+    "deflection": "↩️ Deflection",
+    "ultimatum": "⚡ Ultimatums & Threats",
+    "looping": "🔁 Looping / Interrogation",
+    "lying_indicator": "🤥 Lying Indicators",
+    "minimizing": "📉 Minimizing",
+    "love_bombing": "💣 Love Bombing",
+    "future_faking": "🔮 Future Faking",
+    "triangulation": "📐 Triangulation",
+    "emotional_blackmail": "🖤 Emotional Blackmail",
+    "silent_treatment": "🤐 Silent Treatment Threat",
+    "double_bind": "♾️ Double Bind",
+    "prank_test": "🎭 Prank / Testing Reactions",
+    "selective_memory": "🧠 Selective Memory / Trickle Truth",
+    "catastrophizing": "🌪️ Catastrophizing",
+    "demand_compliance": "📋 Demand for Compliance",
 }
 
-PATTERN_DESCRIPTIONS: Dict[str, str] = {
-    'deny':                 'Denying something they clearly did or said. (Freyd, 1997)',
-    'attack':               'Turning it around to attack the other person. (Freyd, 1997)',
-    'reverse_victim':       'Making themselves the victim when they are the offender. (Freyd, 1997)',
-    'gaslighting':          'Making someone question their perception of reality. (Stern, 2007)',
-    'criticism':            'Attacking character rather than addressing specific behavior. (Gottman, 1999)',
-    'contempt':             'Treating with disrespect, mockery, superiority, or sarcasm. (Gottman, 1999)',
-    'defensiveness':        'Deflecting responsibility and counter-blaming. (Gottman, 1999)',
-    'stonewalling':         'Withdrawing, shutting down, or refusing to engage. (Gottman, 1999)',
-    'control':              'Controlling who the person sees, talks to, or where they go. (Stark, 2007)',
-    'financial_control':    'Using money or finances as a weapon or leverage. (Duluth Model)',
-    'weaponize_family':     'Using family illness, death, or trauma as leverage. (Bancroft, 2002)',
-    'guilt_trip':           'Inducing guilt to manipulate behavior or compliance.',
-    'deflection':           'Changing the subject or redirecting blame when confronted.',
-    'ultimatum':            'Threatening to leave, end things, or impose consequences.',
-    'looping':              'Repeating the same issue until they get the desired response. (Bancroft, 2002)',
-    'lying_indicator':      'Patterns consistent with deception, denial, or story-changing.',
-    'minimizing':           'Downplaying the other person\'s feelings or experiences.',
-    'love_bombing':         'Excessive affection/attention used to overwhelm boundaries. (Arabi, 2017)',
-    'future_faking':        'Making promises about the future with no intention to follow through.',
-    'triangulation':        'Introducing third parties to create jealousy or validate position.',
-    'emotional_blackmail':  'Using fear, obligation, or guilt to control. (Forward & Frazier, 1997)',
-    'silent_treatment':     'Weaponized withdrawal of communication as punishment.',
-    'double_bind':          'Creating a lose-lose situation where all choices are punished.',
-    'prank_test':           'Fabricating scenarios to test reactions or entrap.',
-    'selective_memory':     'Conveniently forgetting or revealing information incrementally.',
-    'catastrophizing':      'Exaggerating situations to create urgency or panic.',
-    'demand_compliance':    'Demanding agreement, apology, or submission without negotiation.',
+PATTERN_DESCRIPTIONS: dict[str, str] = {
+    "deny": "Denying something they clearly did or said. (Freyd, 1997)",
+    "attack": "Turning it around to attack the other person. (Freyd, 1997)",
+    "reverse_victim": "Making themselves the victim when they are the offender. (Freyd, 1997)",
+    "gaslighting": "Making someone question their perception of reality. (Stern, 2007)",
+    "criticism": "Attacking character rather than addressing specific behavior. (Gottman, 1999)",
+    "contempt": "Treating with disrespect, mockery, superiority, or sarcasm. (Gottman, 1999)",
+    "defensiveness": "Deflecting responsibility and counter-blaming. (Gottman, 1999)",
+    "stonewalling": "Withdrawing, shutting down, or refusing to engage. (Gottman, 1999)",
+    "control": "Controlling who the person sees, talks to, or where they go. (Stark, 2007)",
+    "financial_control": "Using money or finances as a weapon or leverage. (Duluth Model)",
+    "weaponize_family": "Using family illness, death, or trauma as leverage. (Bancroft, 2002)",
+    "guilt_trip": "Inducing guilt to manipulate behavior or compliance.",
+    "deflection": "Changing the subject or redirecting blame when confronted.",
+    "ultimatum": "Threatening to leave, end things, or impose consequences.",
+    "looping": "Repeating the same issue until they get the desired response. (Bancroft, 2002)",
+    "lying_indicator": "Patterns consistent with deception, denial, or story-changing.",
+    "minimizing": "Downplaying the other person's feelings or experiences.",
+    "love_bombing": "Excessive affection/attention used to overwhelm boundaries. (Arabi, 2017)",
+    "future_faking": "Making promises about the future with no intention to follow through.",
+    "triangulation": "Introducing third parties to create jealousy or validate position.",
+    "emotional_blackmail": "Using fear, obligation, or guilt to control. (Forward & Frazier, 1997)",
+    "silent_treatment": "Weaponized withdrawal of communication as punishment.",
+    "double_bind": "Creating a lose-lose situation where all choices are punished.",
+    "prank_test": "Fabricating scenarios to test reactions or entrap.",
+    "selective_memory": "Conveniently forgetting or revealing information incrementally.",
+    "catastrophizing": "Exaggerating situations to create urgency or panic.",
+    "demand_compliance": "Demanding agreement, apology, or submission without negotiation.",
 }
 
 # Severity ranking for pattern categories (higher = more concerning)
-PATTERN_SEVERITY: Dict[str, int] = {
-    'weaponize_family':     10,
-    'gaslighting':          9,
-    'emotional_blackmail':  9,
-    'control':              8,
-    'financial_control':    8,
-    'reverse_victim':       8,
-    'double_bind':          7,
-    'looping':              7,
-    'ultimatum':            7,
-    'triangulation':        6,
-    'love_bombing':         6,
-    'deny':                 6,
-    'attack':               6,
-    'contempt':             6,
-    'guilt_trip':           5,
-    'lying_indicator':      5,
-    'prank_test':           5,
-    'criticism':            5,
-    'future_faking':        5,
-    'selective_memory':     4,
-    'minimizing':           4,
-    'deflection':           4,
-    'demand_compliance':    4,
-    'catastrophizing':      3,
-    'defensiveness':        3,
-    'stonewalling':         3,
-    'silent_treatment':     3,
+PATTERN_SEVERITY: dict[str, int] = {
+    "weaponize_family": 10,
+    "gaslighting": 9,
+    "emotional_blackmail": 9,
+    "control": 8,
+    "financial_control": 8,
+    "reverse_victim": 8,
+    "double_bind": 7,
+    "looping": 7,
+    "ultimatum": 7,
+    "triangulation": 6,
+    "love_bombing": 6,
+    "deny": 6,
+    "attack": 6,
+    "contempt": 6,
+    "guilt_trip": 5,
+    "lying_indicator": 5,
+    "prank_test": 5,
+    "criticism": 5,
+    "future_faking": 5,
+    "selective_memory": 4,
+    "minimizing": 4,
+    "deflection": 4,
+    "demand_compliance": 4,
+    "catastrophizing": 3,
+    "defensiveness": 3,
+    "stonewalling": 3,
+    "silent_treatment": 3,
 }
