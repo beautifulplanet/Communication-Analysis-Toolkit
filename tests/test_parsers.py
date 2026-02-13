@@ -10,14 +10,8 @@ import pytest
 import tempfile
 from unittest.mock import patch
 
-from engine.analyzer import (
-    escape_md,
-    load_config,
-    phone_match,
-    parse_sms,
-    parse_json_messages,
-    DEFAULT_CONFIG,
-)
+from engine.config import escape_md, load_config, DEFAULT_CONFIG
+from engine.ingestion import phone_match, parse_sms, parse_json_messages
 
 
 # ==============================================================================
@@ -182,7 +176,7 @@ class TestParseJsonMessages:
             f.write("{}")
             f.flush()
             # Mock os.path.getsize to return a huge value
-            with patch('engine.analyzer.os.path.getsize', return_value=600 * 1024 * 1024):
+            with patch('engine.ingestion.os.path.getsize', return_value=600 * 1024 * 1024):
                 result = parse_json_messages(f.name)
         assert result == []
         os.unlink(f.name)
