@@ -1,0 +1,21 @@
+# =============================================================================
+# Communication Analysis Toolkit — Docker Compose
+# =============================================================================
+# Quick-start for local analysis runs.
+#
+# USAGE:
+#   1. Place your data in cases/my_case/source_data/
+#   2. Create cases/my_case/config.json
+#   3. Run:  docker compose run analyze --config cases/my_case/config.json --yes
+#   4. Reports appear in ./output/
+# =============================================================================
+
+services:
+  analyze:
+    build: .
+    volumes:
+      # Mount case data & output so they persist on host
+      - ./cases:/app/cases:ro
+      - ./output:/app/output
+    environment:
+      - PYTHONUNBUFFERED=1

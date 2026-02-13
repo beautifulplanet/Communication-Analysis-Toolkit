@@ -1,0 +1,52 @@
+# Version control
+.git
+.github
+.gitignore
+
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.venv
+.mypy_cache
+.ruff_cache
+.pytest_cache
+
+# Build tools (large C++ repos — not needed in container)
+build_tools/
+build/
+
+# Personal data — NEVER include in images
+cases/*/source_data/
+old_unused/
+output/
+*.xml
+*.sqlite
+*.db
+*_key.json
+*_key.txt
+*decrypted*
+*.backup
+.consent
+
+# Reports (may contain PII)
+ANALYSIS.md
+EVIDENCE.md
+TIMELINE.md
+DATA.json
+SIGNAL_MESSAGES.md
+AI_PROMPTS.md
+
+# Dev artifacts
+mypy_report.txt
+mypy_final_report.txt
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
