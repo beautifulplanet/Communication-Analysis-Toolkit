@@ -266,7 +266,7 @@ def extract_messages_sqlcipher(conn):
     print(f"  Message table '{msg_table}' columns: {cols[:15]}...")
     
     # Count total messages
-    total = c.execute(f"SELECT COUNT(*) FROM {msg_table}").fetchone()[0]
+    total = c.execute(f"SELECT COUNT(*) FROM {msg_table}").fetchone()[0]  # nosec B608 — msg_table validated by _safe_ident
     print(f"  Total messages in database: {total:,}")
     
     # Find the conversation — try by phone number
@@ -284,7 +284,7 @@ def extract_messages_sqlcipher(conn):
             if search_col in conv_cols:
                 try:
                     search_col = _safe_ident(search_col)
-                    c.execute(f"SELECT * FROM {conv_table} WHERE {search_col} LIKE ?", (f'%{CONTACT_PHONE}%',))
+                    c.execute(f"SELECT * FROM {conv_table} WHERE {search_col} LIKE ?", (f'%{CONTACT_PHONE}%',))  # nosec B608 — identifiers validated by _safe_ident
                     row = c.fetchone()
                     if row:
                         row_dict = dict(zip(conv_cols, row))
@@ -319,11 +319,11 @@ def extract_messages_sqlcipher(conn):
     
     # Query messages for our conversation
     if conversation_id and conv_col:
-        query = f"SELECT * FROM {msg_table} WHERE {conv_col} = ? AND {body_col} IS NOT NULL ORDER BY {time_col}"
+        query = f"SELECT * FROM {msg_table} WHERE {conv_col} = ? AND {body_col} IS NOT NULL ORDER BY {time_col}"  # nosec B608 — identifiers validated by _safe_ident
         c.execute(query, (conversation_id,))
     else:
         # Get all messages and filter later
-        query = f"SELECT * FROM {msg_table} WHERE {body_col} IS NOT NULL ORDER BY {time_col}"
+        query = f"SELECT * FROM {msg_table} WHERE {body_col} IS NOT NULL ORDER BY {time_col}"  # nosec B608 — identifiers validated by _safe_ident
         c.execute(query)
     
     rows = c.fetchall()

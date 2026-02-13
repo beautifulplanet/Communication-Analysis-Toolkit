@@ -41,10 +41,10 @@ SUPPORTIVE CATEGORIES:
 """
 
 import re
-from typing import List, Tuple, Dict, Optional
+from typing import Optional
 
 # Type alias: (supportive_category, matched_text, full_message)
-SupportiveMatch = Tuple[str, str, str]
+SupportiveMatch = tuple[str, str, str]
 
 
 # ==============================================================================
@@ -281,12 +281,13 @@ VULNERABILITY_PATTERNS = [
 # SECTION 15: UNIFIED SUPPORTIVE DETECTION ENGINE
 # ==============================================================================
 
+
 def detect_supportive_patterns(
     body: str,
     direction: str,
     msg_idx: int = -1,
     all_msgs: Optional[list] = None,
-) -> List[SupportiveMatch]:
+) -> list[SupportiveMatch]:
     """
     Detect positive/supportive communication patterns in a message.
 
@@ -307,7 +308,7 @@ def detect_supportive_patterns(
         return []
 
     lower = body.lower().strip()
-    results: List[SupportiveMatch] = []
+    results: list[SupportiveMatch] = []
 
     def run(patterns, category):
         for p in patterns:
@@ -315,20 +316,20 @@ def detect_supportive_patterns(
             if m:
                 results.append((category, m.group(), body))
 
-    run(VALIDATION_PATTERNS, 'validation')
-    run(EMPATHY_PATTERNS, 'empathy')
-    run(APPRECIATION_PATTERNS, 'appreciation')
-    run(ENCOURAGEMENT_PATTERNS, 'encouragement')
-    run(ACCOUNTABILITY_PATTERNS, 'accountability')
-    run(REPAIR_ATTEMPT_PATTERNS, 'repair_attempt')
-    run(ACTIVE_LISTENING_PATTERNS, 'active_listening')
-    run(EMOTIONAL_SUPPORT_PATTERNS, 'emotional_support')
-    run(AFFIRMATION_PATTERNS, 'affirmation')
-    run(COMPROMISE_PATTERNS, 'compromise')
-    run(BOUNDARY_RESPECT_PATTERNS, 'boundary_respect')
-    run(REASSURANCE_PATTERNS, 'reassurance')
-    run(GRATITUDE_PATTERNS, 'gratitude')
-    run(VULNERABILITY_PATTERNS, 'vulnerability')
+    run(VALIDATION_PATTERNS, "validation")
+    run(EMPATHY_PATTERNS, "empathy")
+    run(APPRECIATION_PATTERNS, "appreciation")
+    run(ENCOURAGEMENT_PATTERNS, "encouragement")
+    run(ACCOUNTABILITY_PATTERNS, "accountability")
+    run(REPAIR_ATTEMPT_PATTERNS, "repair_attempt")
+    run(ACTIVE_LISTENING_PATTERNS, "active_listening")
+    run(EMOTIONAL_SUPPORT_PATTERNS, "emotional_support")
+    run(AFFIRMATION_PATTERNS, "affirmation")
+    run(COMPROMISE_PATTERNS, "compromise")
+    run(BOUNDARY_RESPECT_PATTERNS, "boundary_respect")
+    run(REASSURANCE_PATTERNS, "reassurance")
+    run(GRATITUDE_PATTERNS, "gratitude")
+    run(VULNERABILITY_PATTERNS, "vulnerability")
 
     return results
 
@@ -337,38 +338,38 @@ def detect_supportive_patterns(
 # SECTION 16: METADATA
 # ==============================================================================
 
-SUPPORTIVE_LABELS: Dict[str, str] = {
-    'validation':       '✅ Validation',
-    'empathy':          '💛 Empathy',
-    'appreciation':     '🌻 Appreciation',
-    'encouragement':    '💪 Encouragement',
-    'accountability':   '🤝 Accountability',
-    'repair_attempt':   '🔧 Repair Attempt',
-    'active_listening': '👂 Active Listening',
-    'emotional_support': '🫂 Emotional Support',
-    'affirmation':      '⭐ Affirmation',
-    'compromise':       '⚖️ Compromise',
-    'boundary_respect': '🏳️ Boundary Respect',
-    'reassurance':      '🛡️ Reassurance',
-    'gratitude':        '🙏 Gratitude',
-    'vulnerability':    '💎 Vulnerability',
+SUPPORTIVE_LABELS: dict[str, str] = {
+    "validation": "✅ Validation",
+    "empathy": "💛 Empathy",
+    "appreciation": "🌻 Appreciation",
+    "encouragement": "💪 Encouragement",
+    "accountability": "🤝 Accountability",
+    "repair_attempt": "🔧 Repair Attempt",
+    "active_listening": "👂 Active Listening",
+    "emotional_support": "🫂 Emotional Support",
+    "affirmation": "⭐ Affirmation",
+    "compromise": "⚖️ Compromise",
+    "boundary_respect": "🏳️ Boundary Respect",
+    "reassurance": "🛡️ Reassurance",
+    "gratitude": "🙏 Gratitude",
+    "vulnerability": "💎 Vulnerability",
 }
 
-SUPPORTIVE_DESCRIPTIONS: Dict[str, str] = {
-    'validation':       'Acknowledging the other person\'s feelings and experiences as valid. (Gottman, 1999)',
-    'empathy':          'Showing emotional understanding and compassion. (Johnson, 2008)',
-    'appreciation':     'Expressing gratitude and recognizing the other person\'s value. (Gottman, 1999)',
-    'encouragement':    'Supporting growth, effort, and resilience. (Chapman, 1992)',
-    'accountability':   'Taking genuine responsibility for one\'s own actions. (Rosenberg, 2003)',
-    'repair_attempt':   'Actively trying to de-escalate and reconnect during conflict. (Gottman, 1999)',
-    'active_listening': 'Demonstrating attentive, engaged listening. (Rogers, 1961)',
-    'emotional_support': 'Being present and available during emotional difficulty. (Johnson, 2008)',
-    'affirmation':      'Affirming the other person\'s character and worth. (Chapman, 1992)',
-    'compromise':       'Seeking mutually acceptable solutions and accepting influence. (Gottman, 1999)',
-    'boundary_respect': 'Respecting the other person\'s autonomy, space, and choices.',
-    'reassurance':      'Providing comfort and security about the relationship\'s stability.',
-    'gratitude':        'Expressing thankfulness and positive reciprocity. (Algoe, 2012)',
-    'vulnerability':    'Sharing authentic feelings openly, building trust. (Brown, 2012)',
+SUPPORTIVE_DESCRIPTIONS: dict[str, str] = {
+    "validation": "Acknowledging the other person's feelings and experiences as valid. (Gottman, 1999)",
+    "empathy": "Showing emotional understanding and compassion. (Johnson, 2008)",
+    "appreciation": "Expressing gratitude and recognizing the other person's value. (Gottman, 1999)",
+    "encouragement": "Supporting growth, effort, and resilience. (Chapman, 1992)",
+    "accountability": "Taking genuine responsibility for one's own actions. (Rosenberg, 2003)",
+    "repair_attempt": "Actively trying to de-escalate and reconnect during conflict. (Gottman, 1999)",
+    "active_listening": "Demonstrating attentive, engaged listening. (Rogers, 1961)",
+    "emotional_support": "Being present and available during emotional difficulty. (Johnson, 2008)",
+    "affirmation": "Affirming the other person's character and worth. (Chapman, 1992)",
+    "compromise": "Seeking mutually acceptable solutions and accepting influence. (Gottman, 1999)",
+    "boundary_respect": "Respecting the other person's autonomy, space, and choices.",
+    "reassurance": "Providing comfort and security about the relationship's stability.",
+    "gratitude": "Expressing thankfulness and positive reciprocity. (Algoe, 2012)",
+    "vulnerability": "Sharing authentic feelings openly, building trust. (Brown, 2012)",
 }
 
 # Supportive value ranking (higher = more impactful for relationship health).
@@ -391,19 +392,19 @@ SUPPORTIVE_DESCRIPTIONS: Dict[str, str] = {
 # NOTE: These weights have not been empirically validated through
 # quantitative analysis of text-based communication datasets. Future work
 # could refine them using annotated relationship outcome data.
-SUPPORTIVE_VALUE: Dict[str, int] = {
-    'empathy':          10,
-    'accountability':   10,
-    'repair_attempt':   9,
-    'vulnerability':    9,
-    'validation':       8,
-    'emotional_support': 8,
-    'appreciation':     7,
-    'affirmation':      7,
-    'encouragement':    7,
-    'compromise':       6,
-    'active_listening': 6,
-    'boundary_respect': 6,
-    'reassurance':      5,
-    'gratitude':        5,
+SUPPORTIVE_VALUE: dict[str, int] = {
+    "empathy": 10,
+    "accountability": 10,
+    "repair_attempt": 9,
+    "vulnerability": 9,
+    "validation": 8,
+    "emotional_support": 8,
+    "appreciation": 7,
+    "affirmation": 7,
+    "encouragement": 7,
+    "compromise": 6,
+    "active_listening": 6,
+    "boundary_respect": 6,
+    "reassurance": 5,
+    "gratitude": 5,
 }

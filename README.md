@@ -1,8 +1,8 @@
 # Communication Analysis Toolkit
 
 **Version 3.0.0**
-
-A clinical-grade analysis engine for text-based communication. Identifies behavioral patterns, communication dynamics, and interaction health using peer-reviewed behavioral science.
+.
+A clinical-grade analysis engine for text-based communication. Identifies behavioral patterns, communication dynamics, and interaction health using peer-reviewed behavioral science
 
 > **Not a diagnostic tool.** Pattern detection is probabilistic. Always review flagged content in context. This is not a substitute for professional legal or clinical advice.
 

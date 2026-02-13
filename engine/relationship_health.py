@@ -17,11 +17,12 @@ REFERENCES:
 ================================================================================
 """
 
-from typing import List, Dict, Tuple, Optional
-from engine.patterns import detect_patterns, PATTERN_SEVERITY
+from typing import Optional
+
+from engine.patterns import PATTERN_SEVERITY, detect_patterns
 from engine.patterns_supportive import (
-    detect_supportive_patterns,
     SUPPORTIVE_VALUE,
+    detect_supportive_patterns,
 )
 
 
@@ -30,7 +31,7 @@ def analyze_message_health(
     direction: str,
     msg_idx: int = -1,
     all_msgs: Optional[list] = None,
-) -> Dict:
+) -> dict:
     """
     Analyze a single message for both negative and supportive patterns.
 
@@ -44,17 +45,17 @@ def analyze_message_health(
     pos_score = sum(SUPPORTIVE_VALUE.get(cat, 3) for cat, _, _ in supportive)
 
     return {
-        'negative_hits': negative,
-        'supportive_hits': supportive,
-        'negative_score': neg_score,
-        'supportive_score': pos_score,
-        'net_score': pos_score - neg_score,
+        "negative_hits": negative,
+        "supportive_hits": supportive,
+        "negative_score": neg_score,
+        "supportive_score": pos_score,
+        "net_score": pos_score - neg_score,
     }
 
 
 def calculate_gottman_ratio(
-    messages: List[dict],
-) -> Dict:
+    messages: list[dict],
+) -> dict:
     """
     Calculate a text-based positive-to-negative pattern ratio.
 
@@ -79,12 +80,12 @@ def calculate_gottman_ratio(
     """
     positive_count = 0
     negative_count = 0
-    positive_by_cat: Dict[str, int] = {}
-    negative_by_cat: Dict[str, int] = {}
+    positive_by_cat: dict[str, int] = {}
+    negative_by_cat: dict[str, int] = {}
 
     for i, msg in enumerate(messages):
-        body = msg.get('body', '')
-        direction = msg.get('direction', 'unknown')
+        body = msg.get("body", "")
+        direction = msg.get("direction", "unknown")
 
         neg_hits = detect_patterns(body, direction, msg_idx=i, all_msgs=messages)
         pos_hits = detect_supportive_patterns(body, direction, msg_idx=i, all_msgs=messages)
@@ -99,36 +100,36 @@ def calculate_gottman_ratio(
 
     # Calculate ratio (avoid division by zero)
     if negative_count == 0:
-        ratio = float('inf') if positive_count > 0 else 0.0
+        ratio = float("inf") if positive_count > 0 else 0.0
     else:
         ratio = positive_count / negative_count
 
     # Classify
     if negative_count == 0 and positive_count == 0:
-        classification = 'neutral'
+        classification = "neutral"
     elif ratio >= 5.0:
-        classification = 'healthy'
+        classification = "healthy"
     elif ratio >= 3.0:
-        classification = 'at_risk'
+        classification = "at_risk"
     elif ratio >= 1.0:
-        classification = 'unhealthy'
+        classification = "unhealthy"
     else:
-        classification = 'critical'
+        classification = "critical"
 
     return {
-        'ratio': ratio,
-        'classification': classification,
-        'positive_count': positive_count,
-        'negative_count': negative_count,
-        'total_messages': len(messages),
-        'positive_breakdown': positive_by_cat,
-        'negative_breakdown': negative_by_cat,
+        "ratio": ratio,
+        "classification": classification,
+        "positive_count": positive_count,
+        "negative_count": negative_count,
+        "total_messages": len(messages),
+        "positive_breakdown": positive_by_cat,
+        "negative_breakdown": negative_by_cat,
     }
 
 
 def calculate_health_score(
-    messages: List[dict],
-) -> Dict:
+    messages: list[dict],
+) -> dict:
     """
     Calculate an overall relationship health score (0–100).
 
@@ -142,27 +143,30 @@ def calculate_health_score(
         Dict with score, grade, factors breakdown, and recommendations.
     """
     ratio_data = calculate_gottman_ratio(messages)
-    ratio = ratio_data['ratio']
+    ratio = ratio_data["ratio"]
 
     # Factor 1: Gottman ratio (0-40 points)
-    if ratio == float('inf'):
+    if ratio == float("inf"):
         ratio_score = 40
     elif ratio >= 5.0:
         ratio_score = 40
     elif ratio >= 3.0:
         ratio_score = int(20 + (ratio - 3.0) * 10)  # 20-40
     elif ratio >= 1.0:
-        ratio_score = int(10 + (ratio - 1.0) * 5)    # 10-20
+        ratio_score = int(10 + (ratio - 1.0) * 5)  # 10-20
     else:
-        ratio_score = int(max(0, ratio * 10))          # 0-10
+        ratio_score = int(max(0, ratio * 10))  # 0-10
 
     # Factor 2: Positive pattern diversity (0-20 points)
-    pos_categories = len(ratio_data['positive_breakdown'])
+    pos_categories = len(ratio_data["positive_breakdown"])
     diversity_score = min(20, pos_categories * 3)  # ~7 categories = 20
 
     # Factor 3: Absence of high-severity negatives (0-20 points)
-    high_sev_cats = {cat for cat, count in ratio_data['negative_breakdown'].items()
-                     if PATTERN_SEVERITY.get(cat, 0) >= 8}
+    high_sev_cats = {
+        cat
+        for cat, count in ratio_data["negative_breakdown"].items()
+        if PATTERN_SEVERITY.get(cat, 0) >= 8
+    }
     if len(high_sev_cats) == 0:
         severity_score = 20
     elif len(high_sev_cats) <= 2:
@@ -174,10 +178,10 @@ def calculate_health_score(
     sent_pos = 0
     recv_pos = 0
     for msg in messages:
-        body = msg.get('body', '')
-        direction = msg.get('direction', 'unknown')
+        body = msg.get("body", "")
+        direction = msg.get("direction", "unknown")
         hits = detect_supportive_patterns(body, direction)
-        if direction == 'sent':
+        if direction == "sent":
             sent_pos += len(hits)
         else:
             recv_pos += len(hits)
@@ -195,15 +199,15 @@ def calculate_health_score(
 
     # Grade
     if total_score >= 80:
-        grade = 'A'
+        grade = "A"
     elif total_score >= 65:
-        grade = 'B'
+        grade = "B"
     elif total_score >= 50:
-        grade = 'C'
+        grade = "C"
     elif total_score >= 35:
-        grade = 'D'
+        grade = "D"
     else:
-        grade = 'F'
+        grade = "F"
 
     # Recommendations
     recommendations = []
@@ -218,7 +222,7 @@ def calculate_health_score(
             "appreciation, and active listening to build connection."
         )
     if severity_score < 20:
-        high_sev_names = ', '.join(sorted(high_sev_cats))
+        high_sev_names = ", ".join(sorted(high_sev_cats))
         recommendations.append(
             f"High-severity patterns detected ({high_sev_names}). "
             "Consider professional support to address these dynamics."
@@ -235,16 +239,16 @@ def calculate_health_score(
         )
 
     return {
-        'score': total_score,
-        'grade': grade,
-        'classification': ratio_data['classification'],
-        'gottman_ratio': ratio,
-        'factors': {
-            'ratio_score': ratio_score,
-            'diversity_score': diversity_score,
-            'severity_score': severity_score,
-            'balance_score': balance_score,
+        "score": total_score,
+        "grade": grade,
+        "classification": ratio_data["classification"],
+        "gottman_ratio": ratio,
+        "factors": {
+            "ratio_score": ratio_score,
+            "diversity_score": diversity_score,
+            "severity_score": severity_score,
+            "balance_score": balance_score,
         },
-        'recommendations': recommendations,
-        'details': ratio_data,
+        "recommendations": recommendations,
+        "details": ratio_data,
     }
