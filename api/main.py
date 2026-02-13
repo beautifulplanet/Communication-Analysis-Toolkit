@@ -1,0 +1,277 @@
+"""
+================================================================================
+Communication Analysis Toolkit — FastAPI Backend
+================================================================================
+
+Serves analysis data from DATA.json to the React dashboard.
+
+Run:
+    uvicorn api.main:app --reload --port 8000
+
+All endpoints are read-only. Data stays local.
+================================================================================
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from api.schemas import (
+    CallStats,
+    CaseInfo,
+    CaseListResponse,
+    DaySummary,
+    GapItem,
+    HealthResponse,
+    HurtfulItem,
+    HurtfulResponse,
+    MessageStats,
+    PatternDetail,
+    PatternItem,
+    PatternsResponse,
+    SummaryResponse,
+    TimelineResponse,
+)
+
+# ---------------------------------------------------------------------------
+# App setup
+# ---------------------------------------------------------------------------
+
+app = FastAPI(
+    title="Communication Analysis Toolkit",
+    description="API serving communication analysis data for the React dashboard.",
+    version="3.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+# Cases directory — relative to project root
+CASES_DIR = Path(os.environ.get("CASES_DIR", "cases"))
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _find_data_json(case_id: str) -> Path | None:
+    """Locate DATA.json for a given case."""
+    case_dir = CASES_DIR / case_id
+    if not case_dir.is_dir():
+        return None
+    # Check common locations
+    for subpath in ["output/DATA.json", "DATA.json"]:
+        candidate = case_dir / subpath
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _load_case_data(case_id: str) -> dict[str, Any]:
+    """Load and return parsed DATA.json for a case."""
+    data_path = _find_data_json(case_id)
+    if data_path is None:
+        raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found or has no DATA.json")
+    with open(data_path, encoding="utf-8") as f:
+        result: dict[str, Any] = json.load(f)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/health", response_model=HealthResponse)
+async def health_check() -> HealthResponse:
+    """Health check endpoint."""
+    return HealthResponse()
+
+
+@app.get("/api/cases", response_model=CaseListResponse)
+async def list_cases() -> CaseListResponse:
+    """List all available cases."""
+    cases: list[CaseInfo] = []
+    if not CASES_DIR.is_dir():
+        return CaseListResponse(cases=[])
+
+    for entry in sorted(CASES_DIR.iterdir()):
+        if not entry.is_dir():
+            continue
+        case_id = entry.name
+        data_path = _find_data_json(case_id)
+        info = CaseInfo(case_id=case_id, has_data=data_path is not None)
+
+        if data_path is not None:
+            try:
+                with open(data_path, encoding="utf-8") as f:
+                    data = json.load(f)
+                info.case_name = data.get("case", "")
+                info.user_label = data.get("user", "")
+                info.contact_label = data.get("contact", "")
+                info.period_start = data.get("period", {}).get("start", "")
+                info.period_end = data.get("period", {}).get("end", "")
+                info.generated = data.get("generated", "")
+                info.total_days = len(data.get("days", {}))
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        cases.append(info)
+    return CaseListResponse(cases=cases)
+
+
+@app.get("/api/cases/{case_id}/summary", response_model=SummaryResponse)
+async def get_summary(case_id: str) -> SummaryResponse:
+    """Executive summary statistics for a case."""
+    data = _load_case_data(case_id)
+    days_data: dict[str, Any] = data.get("days", {})
+
+    total_sent = 0
+    total_received = 0
+    total_calls = 0
+    total_talk = 0
+    contact_days = 0
+    hurtful_user = 0
+    hurtful_contact = 0
+    severity_user: dict[str, int] = defaultdict(int)
+    severity_contact: dict[str, int] = defaultdict(int)
+    pattern_counts_user: dict[str, int] = defaultdict(int)
+    pattern_counts_contact: dict[str, int] = defaultdict(int)
+
+    for day in days_data.values():
+        total_sent += day.get("messages_sent", 0)
+        total_received += day.get("messages_received", 0)
+        total_calls += day.get("calls_in", 0) + day.get("calls_out", 0) + day.get("calls_missed", 0)
+        total_talk += day.get("talk_seconds", 0)
+        if day.get("had_contact", False):
+            contact_days += 1
+
+        for h in day.get("hurtful_from_user", []):
+            hurtful_user += 1
+            severity_user[h.get("severity", "unknown")] += 1
+        for h in day.get("hurtful_from_contact", []):
+            hurtful_contact += 1
+            severity_contact[h.get("severity", "unknown")] += 1
+
+        for p in day.get("patterns_from_user", []):
+            pattern_counts_user[p.get("pattern", "unknown")] += 1
+        for p in day.get("patterns_from_contact", []):
+            pattern_counts_contact[p.get("pattern", "unknown")] += 1
+
+    total_days = len(days_data)
+    return SummaryResponse(
+        case_name=data.get("case", ""),
+        user_label=data.get("user", ""),
+        contact_label=data.get("contact", ""),
+        period=data.get("period", {}),
+        generated=data.get("generated", ""),
+        total_days=total_days,
+        contact_days=contact_days,
+        no_contact_days=total_days - contact_days,
+        total_messages_sent=total_sent,
+        total_messages_received=total_received,
+        total_calls=total_calls,
+        total_talk_seconds=total_talk,
+        hurtful_from_user=hurtful_user,
+        hurtful_from_contact=hurtful_contact,
+        severity_breakdown={
+            "user": dict(severity_user),
+            "contact": dict(severity_contact),
+        },
+        pattern_counts_user=dict(pattern_counts_user),
+        pattern_counts_contact=dict(pattern_counts_contact),
+    )
+
+
+@app.get("/api/cases/{case_id}/timeline", response_model=TimelineResponse)
+async def get_timeline(case_id: str) -> TimelineResponse:
+    """Day-by-day timeline data."""
+    data = _load_case_data(case_id)
+    days_data: dict[str, Any] = data.get("days", {})
+    gaps_data: list[dict[str, Any]] = data.get("gaps", [])
+
+    days: list[DaySummary] = []
+    for date_str in sorted(days_data.keys()):
+        day = days_data[date_str]
+        days.append(DaySummary(
+            date=date_str,
+            weekday=day.get("weekday", ""),
+            had_contact=day.get("had_contact", False),
+            messages=MessageStats(
+                sent=day.get("messages_sent", 0),
+                received=day.get("messages_received", 0),
+            ),
+            calls=CallStats(
+                incoming=day.get("calls_in", 0),
+                outgoing=day.get("calls_out", 0),
+                missed=day.get("calls_missed", 0),
+                talk_seconds=day.get("talk_seconds", 0),
+            ),
+            hurtful_from_user=[HurtfulItem(**h) for h in day.get("hurtful_from_user", [])],
+            hurtful_from_contact=[HurtfulItem(**h) for h in day.get("hurtful_from_contact", [])],
+            patterns_from_user=[PatternItem(**p) for p in day.get("patterns_from_user", [])],
+            patterns_from_contact=[PatternItem(**p) for p in day.get("patterns_from_contact", [])],
+        ))
+
+    gaps = [GapItem(**g) for g in gaps_data]
+    return TimelineResponse(days=days, gaps=gaps)
+
+
+@app.get("/api/cases/{case_id}/patterns", response_model=PatternsResponse)
+async def get_patterns(case_id: str) -> PatternsResponse:
+    """Pattern breakdown for a case."""
+    data = _load_case_data(case_id)
+    days_data: dict[str, Any] = data.get("days", {})
+
+    # Aggregate by pattern type
+    user_by_pattern: dict[str, list[PatternItem]] = defaultdict(list)
+    contact_by_pattern: dict[str, list[PatternItem]] = defaultdict(list)
+
+    for day in days_data.values():
+        for p in day.get("patterns_from_user", []):
+            user_by_pattern[p.get("pattern", "unknown")].append(PatternItem(**p))
+        for p in day.get("patterns_from_contact", []):
+            contact_by_pattern[p.get("pattern", "unknown")].append(PatternItem(**p))
+
+    all_patterns = sorted(set(list(user_by_pattern.keys()) + list(contact_by_pattern.keys())))
+    details: list[PatternDetail] = []
+    for pat in all_patterns:
+        details.append(PatternDetail(
+            pattern=pat,
+            total_user=len(user_by_pattern.get(pat, [])),
+            total_contact=len(contact_by_pattern.get(pat, [])),
+            instances=user_by_pattern.get(pat, []) + contact_by_pattern.get(pat, []),
+        ))
+
+    return PatternsResponse(patterns=details)
+
+
+@app.get("/api/cases/{case_id}/hurtful", response_model=HurtfulResponse)
+async def get_hurtful(case_id: str) -> HurtfulResponse:
+    """Hurtful language breakdown for a case."""
+    data = _load_case_data(case_id)
+    days_data: dict[str, Any] = data.get("days", {})
+
+    from_user: list[HurtfulItem] = []
+    from_contact: list[HurtfulItem] = []
+
+    for day in days_data.values():
+        for h in day.get("hurtful_from_user", []):
+            from_user.append(HurtfulItem(**h))
+        for h in day.get("hurtful_from_contact", []):
+            from_contact.append(HurtfulItem(**h))
+
+    return HurtfulResponse(from_user=from_user, from_contact=from_contact)
