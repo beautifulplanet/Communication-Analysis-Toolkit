@@ -54,6 +54,9 @@ from engine.reporting import (
     save_data_json,
 )
 from engine.types import CallDict, DayData, GapData, HurtfulEntry, MessageDict, PatternEntry
+from engine.db import init_db
+from engine.storage import CaseStorage
+from pathlib import Path
 
 # ==============================================================================
 # ANALYSIS ENGINE
@@ -65,12 +68,11 @@ def format_duration(seconds: int) -> str:
     seconds = int(seconds)
     if seconds < 60:
         return f"{seconds}s"
-    elif seconds < 3600:
+    if seconds < 3600:
         return f"{seconds // 60}m {seconds % 60}s"
-    else:
-        h = seconds // 3600
-        m = (seconds % 3600) // 60
-        return f"{h}h {m}m"
+    h = seconds // 3600
+    m = (seconds % 3600) // 60
+    return f"{h}h {m}m"
 
 
 def analyze_all(
@@ -212,7 +214,7 @@ def analyze_all(
 # ==============================================================================
 
 
-def run_analysis(config_path: Optional[str] = None) -> None:
+def run_analysis(config_path: Optional[str] = None, use_db: bool = False) -> None:
     logger.info("analysis_started")
 
     if config_path:
@@ -255,6 +257,31 @@ def run_analysis(config_path: Optional[str] = None) -> None:
     )
 
     logger.info("data_loaded", message_count=len(all_texts), call_count=len(all_calls))
+    
+    # ── DB Ingestion ──
+    if use_db:
+        db_path = Path(config["output_dir"]) / "cases.db"
+        logger.info("db_ingestion_started", db_path=str(db_path))
+        
+        init_db(db_path)
+        store = CaseStorage(db_path)
+        
+        case_id = store.create_case(
+            name=config["case_name"],
+            user_name=config["user_label"],
+            contact_name=config["contact_label"],
+            source_path=config_path or "manual_config"
+        )
+        
+        # Optimization: In the future, we can use a transaction here.
+        # For now, relying on CaseStorage's internal connection management.
+        
+        count = 0 
+        for msg in all_texts:
+            store.add_message(case_id, msg)
+            count += 1
+            
+        logger.info("db_ingestion_complete", inserted_messages=count)
 
     # ── Step 2: Analyze ──
     # ── Step 2: Analyze ──
@@ -302,3 +329,31 @@ def run_analysis(config_path: Optional[str] = None) -> None:
     save_data_json(config, days, gaps)
 
     logger.info("all_reports_saved", directory=out)
+
+
+    save_data_json(config, days, gaps)
+
+    logger.info("all_reports_saved", directory=out)
+
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+    from engine.db import init_db
+    from engine.storage import CaseStorage
+    
+    parser = argparse.ArgumentParser(description="Communication Analysis Toolkit")
+    parser.add_argument("--config", help="Path to config.json")
+    parser.add_argument("--use-db", action="store_true", help="Use SQLite database for storage")
+    args = parser.parse_args()
+    
+    try:
+        # If --use-db is set, we need to pass this down or handle it here.
+        # Since run_analysis currently only takes config_path, best to refactor 
+        # run_analysis to accept kwargs or modify it. 
+        # For now, let's modify run_analysis signature in the next step, 
+        # and just pass the flag here.
+        run_analysis(args.config, use_db=args.use_db)
+    except Exception as e:
+        logger.error("analysis_failed", error=str(e))
+        sys.exit(1)
