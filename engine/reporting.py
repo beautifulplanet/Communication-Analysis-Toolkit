@@ -35,12 +35,11 @@ def format_duration(seconds: int) -> str:
     seconds = int(seconds)
     if seconds < 60:
         return f"{seconds}s"
-    elif seconds < 3600:
+    if seconds < 3600:
         return f"{seconds // 60}m {seconds % 60}s"
-    else:
-        h = seconds // 3600
-        m = (seconds % 3600) // 60
-        return f"{h}h {m}m"
+    h = seconds // 3600
+    m = (seconds % 3600) // 60
+    return f"{h}h {m}m"
 
 
 def generate_analysis_report(
@@ -197,7 +196,7 @@ def generate_evidence_report(config: dict[str, Any], days: dict[str, DayData]) -
     all_hurtful_contact: list[HurtfulEntryWithDate] = []
     for d in sorted_dates:
         for h in days[d]["hurtful"]["from_contact"]:
-            h_entry_with_date: HurtfulEntryWithDate = {**h, "date": d}  # type: ignore
+            h_entry_with_date: HurtfulEntryWithDate = {**h, "date": d}
             all_hurtful_contact.append(h_entry_with_date)
 
     for severity, emoji, desc in [
@@ -219,7 +218,7 @@ def generate_evidence_report(config: dict[str, Any], days: dict[str, DayData]) -
     all_hurtful_user: list[HurtfulEntryWithDate] = []
     for d in sorted_dates:
         for h in days[d]["hurtful"]["from_user"]:
-            h_entry_with_date_user: HurtfulEntryWithDate = {**h, "date": d}  # type: ignore
+            h_entry_with_date_user: HurtfulEntryWithDate = {**h, "date": d}
             all_hurtful_user.append(h_entry_with_date_user)
 
     for severity, emoji, desc in [
@@ -246,7 +245,7 @@ def generate_evidence_report(config: dict[str, Any], days: dict[str, DayData]) -
     all_patterns_contact: list[PatternEntryWithDate] = []
     for d in sorted_dates:
         for entry in days[d]["patterns"]["from_contact"]:
-            p_entry_with_date: PatternEntryWithDate = {**entry, "date": d}  # type: ignore
+            p_entry_with_date: PatternEntryWithDate = {**entry, "date": d}
             all_patterns_contact.append(p_entry_with_date)
 
     pattern_order = sorted(
@@ -267,7 +266,7 @@ def generate_evidence_report(config: dict[str, Any], days: dict[str, DayData]) -
                     seen[key]["count"] += 1
                 else:
                     seen[key] = {"entry": e, "count": 1}
-            for key, info in seen.items():
+            for _key, info in seen.items():
                 e = info["entry"]
                 count_note = f" x{info['count']}" if info["count"] > 1 else ""
                 lines.append(f"**{e['date']} {e['time']}{count_note}** — Matched: `{e['matched']}`")

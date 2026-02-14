@@ -4,290 +4,275 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code Style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-**Version 3.1.0**
-.
-A research-informed analysis engine for text-based communication. Identifies behavioral patterns, communication dynamics, and interaction health using peer-reviewed behavioral science
+**Version 3.1.0** — A research-informed forensic engine for analyzing text-based communication.
 
-> **Not a diagnostic tool.** Pattern detection is probabilistic. Always review flagged content in context. This is not a substitute for professional legal or clinical advice.
->
-> **Privacy First:** This tool runs 100% locally. Your data never leaves your machine. See [DATA_PRIVACY.md](DATA_PRIVACY.md) for details.
+> **Privacy First:** This tool runs **100% locally**. Your data never leaves your machine.
 
 ---
+
+## Documentation Parts
+
+This README is divided into 4 parts for different audiences:
+
+1.  **[Summary (Part 1)](docs/summary.md)**: High-level overview of features and pattern detection categories.
+2.  **[Technical Stack (Part 2)](docs/tech_stack.md)**: Architecture, data sources, and development guide for engineers.
+3.  **[Quick Start (Part 3)](docs/quick_start.md)**: Installation and usage instructions for developers.
+4.  **[Tutorial (Part 4)](docs/tutorial.md)**: Step-by-step guide for non-technical users.
+
+---
+
+# Part 1: Summary
 
 ## What It Does
 
-Given communication data (SMS, Signal, CSV, or JSON), this tool produces:
+The **Communication Analysis Toolkit** is a research-informed forensic engine designed to analyze text-based communication (SMS, Signal, etc.) for behavioral patterns. It provides objective, data-driven insights into relationship dynamics, specifically detecting clinical patterns associated with high-conflict or manipulative interactions.
 
-- **TIMELINE.md** — Day-by-day narrative with mood indicators and flagged incidents
-- **ANALYSIS.md** — Comprehensive statistics: message volumes, language analysis, pattern breakdowns
-- **EVIDENCE.md** — Every flagged incident with full quotes, matched patterns, and severity ratings
-- **DATA.json** — Machine-readable dataset for further analysis or visualization
-- **AI_PROMPTS.md** — Ready-made prompts for external AI auditing (ChatGPT, Claude, Gemini)
-
----
+### Key Outputs
+*   **TIMELINE.md**: A day-by-day narrative of the relationship, flagging specific incidents.
+*   **ANALYSIS.md**: Comprehensive statistics including message volume, response times, and pattern breakdowns.
+*   **EVIDENCE.md**: A catalog of every flagged message with its severity rating and clinical classification.
+*   **DATA.json**: A machine-readable dataset of the entire analysis.
 
 ## Pattern Detection Categories
 
-All patterns are sourced from peer-reviewed clinical psychology and communication research.
+The engine uses regex-based detection grounded in peer-reviewed behavioral science.
 
-### Core DARVO (Freyd, 1997)
-| Pattern | Description |
-|---------|-------------|
-| Deny | Denying something they clearly did or said |
-| Attack | Turning it around to attack the other person |
-| Reverse Victim & Offender | Making themselves the victim when they are the offender |
+### 🚩 Core Manipulation (DARVO)
+*   **Deny**: Denying events that occurred.
+*   **Attack**: Attacking the accuser to deflect blame.
+*   **Reverse Victim & Offender**: Claiming victimhood when being the aggressor.
+*(Source: Freyd, 1997)*
 
-### Gottman's Four Horsemen (Gottman & Silver, 1999)
-| Pattern | Description |
-|---------|-------------|
-| Criticism | Attacking character rather than addressing specific behavior |
-| Contempt | Treating with disrespect, mockery, or superiority |
-| Defensiveness | Deflecting responsibility and counter-blaming |
-| Stonewalling | Withdrawing, shutting down, or refusing to engage |
+### 🚩 The "Four Horsemen"
+*   **Criticism**: Attacking character rather than behavior.
+*   **Contempt**: Expressions of superiority, mockery, or disgust.
+*   **Defensiveness**: Counter-blaming or playing the victim.
+*   **Stonewalling**: Withdrawal and refusal to engage.
+*(Source: Gottman & Silver, 1999)*
 
-### Gaslighting (Stern, 2007)
-Reality denial, sanity questioning, sensitivity shaming, joke deflection, social consensus weaponizing.
+### 🚩 Coercive Control
+*   **Isolation**: Controlling who the person sees or talks to.
+*   **Financial Control**: Using money as leverage.
+*   **Weaponizing Health**: Using illness or trauma to manipulate.
+*(Source: Stark, 2007)*
 
-### Coercive Control (Stark, 2007; Duluth Model)
-| Pattern | Description |
-|---------|-------------|
-| Control & Isolation | Controlling who the person sees, talks to, or where they go |
-| Financial Control | Using money or finances as leverage |
-| Weaponizing Family/Health | Using family illness, death, or trauma as leverage |
+### 💛 Positive Communication (New in v3.1)
+*   **Validation**: Acknowledging the other person's reality.
+*   **Empathy**: Expressing understanding of feelings.
+*   **Appreciation**: Expressing gratitude or value.
+*   **Responsibility**: Owning one's own actions.
 
-### Extended Manipulation
-| Pattern | Source |
-|---------|--------|
-| Guilt Trip | Clinical literature |
-| Deflection | Clinical literature |
-| Ultimatums & Threats | Bancroft, 2002 |
-| Looping / Interrogation | Bancroft, 2002 |
-| Lying Indicators | Forensic communication |
-| Minimizing | Clinical literature |
-| Love Bombing | Arabi, 2017 |
-| Future Faking | Clinical literature |
-| Triangulation | Clinical literature |
-| Emotional Blackmail | Forward & Frazier, 1997 |
-| Silent Treatment | Clinical literature |
-| Double Bind | Bateson, 1956 |
-| Selective Memory | Clinical literature |
-| Catastrophizing | CBT literature |
-| Demand for Compliance | Clinical literature |
-
-### Hurtful Language (3-Tier Severity)
-| Level | Description |
-|-------|-------------|
-| Severe | Personal attacks, weaponizing trauma, credible threats |
-| Moderate | Directed profanity, insults aimed at the person |
-| Mild | Dismissive language, contextual profanity |
+## Context-Aware Filtering
+To reduce false positives, the system understands context. It suppression negative flags when it detects:
+*   ✅ **Apologies** ("I'm sorry", "My bad")
+*   ✅ **Self-Directed Negativity** ("I hate myself", not "I hate you")
+*   ✅ **De-escalation** ("Let's take a break", "I don't want to fight")
+*   ✅ **Banter/Jokes** (Detected via laughter, emojis, and reciprocal tone)
 
 ---
 
-## Context-Aware Filtering (v3.0)
+# Part 2: Technical Stack
 
-The engine includes **7 context filter functions** that dramatically reduce false positives by recognizing benign intent:
+## Architecture
 
-| Filter | What it detects |
-|--------|----------------|
-| `is_apology` | "I'm sorry", "my bad", "I was wrong" |
-| `is_self_directed` | Negativity about self, not the other person |
-| `is_third_party_venting` | Complaints about work, boss, traffic — not partner |
-| `is_de_escalation` | "Let's calm down", "I don't want to fight" |
-| `is_expressing_hurt` | "Sounds like you don't wanna see me" — hurt, not attack |
-| `is_joke_context` | Surrounding messages contain laughter/emoji signals |
-| `is_banter` | Both sides laughing in a window — playful exchange |
+The system is built on a modular "Agentic RAG" architecture designed for local-first privacy and scalability.
 
-For lower-severity categories (defensiveness, stonewalling, minimizing, etc.), matches are suppressed when any context filter fires. High-severity categories (control, gaslighting, emotional blackmail) are **never** suppressed.
+### Layers
+1.  **Ingestion & Analysis Engine** (`engine/`):
+    *   **Parsers**: XML (SMS/Calls), SQLite (Signal), JSON/CSV.
+    *   **Analyzer**: Regex-based pattern detection with context-aware filtering.
+    *   **Storage**: SQLite database for persistence of cases, messages, and analysis results.
+
+2.  **API Layer** (`api/`):
+    *   **FastAPI**: Provides REST endpoints for the frontend and agent.
+    *   **Async Processing**: Celery + Redis for handling large dataset ingestion in the background.
+
+3.  **Agentic AI** (`api/agent.py`):
+    *   **RAG Engine**: Retrieves relevant messages based on semantic query analysis.
+    *   **LLM Integration**: Constructs context-rich prompts for external LLMs (OpenAI, Anthropic) to answer user questions.
+
+## Supported Data Sources
+
+| Source | Format | Direction | Notes |
+| :--- | :--- | :--- | :--- |
+| **SMS Backup & Restore** | XML | Both | Standard Android backup format |
+| **Call Logs** | XML | Both | Standard Android call log format |
+| **Signal Desktop** | SQLite | Both | Decrypted via `sqlcipher` |
+| **CSV** | CSV | Both | Custom import (Date, Direction, Body) |
+| **Manual JSON** | JSON | Both | For transcribing handwritten notes/images |
+
+## Active Scripts
+
+Located in `active/`:
+*   `signal_desktop_extractor.py`: Decrypts and extracts messages from Signal Desktop's local database.
+*   `generate_monthly_reports.py`: Aggregates daily analysis into monthly summaries.
+
+## Diagnostic Tools
+
+Located in `tools/`:
+*   `names.py`: Anonymize names in the dataset.
+*   `redact_number.py`: scrub phone numbers from output files.
+*   `explore_db.py`: Inspect the SQLite database structure.
+*   `debug_xml.py`: Validate XML structure before ingestion.
+
+## Development
+
+### Prerequisites
+*   Python 3.11+
+*   Redis (for async tasks)
+*   Docker (optional, for full stack execution)
+
+### Testing
+We use `pytest` for unit and integration testing.
+```bash
+pytest
+```
+
+### Type Checking & Linting
+We enforce strict typing and code style.
+```bash
+mypy .
+ruff check .
+```
 
 ---
 
-## Quick Start
+# Part 3: Quick Start Guide
 
-### 1. Set Up a Case
+## Installation
 
-```
-Communication Analysis Toolkit/
-├── api/                     # FastAPI Backend & AI Agent
-│   ├── main.py
-│   ├── agent.py
-│   ├── retriever.py
-│   └── routers/
-├── engine/                  # Core Analysis Logic
-│   ├── analyzer.py
-│   └── patterns.py
-├── docs/                    # Documentation & ADRs
-│   └── adr/
-├── tools/                   # Diagnostic scripts
-├── cases/                   # User data
-├── tests/                   # Test suite
-├── requirements.txt
-└── README.md
-```
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/beautifulplanet/Communication-Analysis-Toolkit.git
+    cd Communication-Analysis-Toolkit
+    ```
 
-### 2. Create config.json
+2.  **Install Dependencies**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Running Your First Analysis
+
+### 1. Prepare Your Data
+Place your `sms_backup.xml` (from SMS Backup & Restore) or `calls.xml` into a new folder:
+`cases/my_case/source_data/`
+
+### 2. Configure the Analysis
+Create `cases/my_case/config.json`:
 
 ```json
 {
     "case_name": "My Case",
-    "user_label": "User A",
-    "contact_label": "User B",
+    "user_label": "Me",
+    "contact_label": "Ex-Partner",
     "sms_xml": "./cases/my_case/source_data/sms_backup.xml",
     "output_dir": "./cases/my_case/output",
-    "date_start": "2025-01-01",
-    "date_end": "2026-02-09"
+    "date_start": "2020-01-01",
+    "date_end": "2025-12-31"
 }
 ```
 
-### 3. Run the Analysis
-
-**Step A: Process Data**
+### 3. Run the Engine
 ```bash
 python -m engine.analyzer --config cases/my_case/config.json
 ```
-This generates `DATA.json`, `ANALYSIS.md`, and `TIMELINE.md`.
 
-**Step B: Start the AI Agent API**
-```bash
-uvicorn api.main:app --reload
-```
-The API will be available at `http://localhost:8000`.
+## Viewing Results
 
----
+Navigate to `cases/my_case/output/` to inspect:
 
-## Architecture & Design
+*   **`ANALYSIS.md`**: High-level statistical overview.
+*   **`TIMELINE.md`**: Chronological narrative of flagged events.
+*   **`EVIDENCE.md`**: Detailed list of every flagged message.
 
-We follow a modular architecture with strict separation of concerns.
+### Advanced Usage: AI Assistant
+To ask questions like *"When did he start gaslighting me?"*:
 
-- **[ADR 001: Agentic RAG Architecture](docs/adr/001-agentic-rag-architecture.md)** — Details the 3-layer query routing system (Structured -> RAG -> Deep).
-- **[ADR 002: Error Handling & Observability](docs/adr/002-error-handling-observability.md)** — Details our resilience-first strategy and structured logging.
-
----
-
-## Supported Data Sources
-
-| Source | Format | Direction |
-|--------|--------|-----------|
-| SMS Backup & Restore | XML | Both (sent & received) |
-| Phone Call Log | XML | Both directions |
-| Signal Desktop | JSON (via extractor) | Both sides |
-| Signal MSL Backup | JSON (protobuf extract) | Sent only |
-| Manual Messages | JSON | Both (user-entered) |
-| CSV Import | CSV (datetime, direction, body) | Both |
-
-### CSV Format
-
-```csv
-datetime,direction,body
-2025-01-15 14:30:00,sent,Hello how are you?
-2025-01-15 14:32:00,received,I'm fine thanks
-```
+1.  Start the API server:
+    ```bash
+    uvicorn api.main:app --reload
+    ```
+2.  Open your browser to `http://localhost:8000/docs`.
+3.  Use the `/agent/chat` endpoint to query your case data.
 
 ---
 
-## Active Scripts (in active/ folder)
+# Part 4: Tutorial for Non-Technical Users
 
-- **signal_desktop_extractor.py** — Extract messages from Signal Desktop's encrypted database
-- **extract_signal_messages.py** — Extract Signal messages from MSL protobuf backup
-- **generate_monthly_reports.py** — Generate per-month & weekly detailed analysis reports
-- **parse_manual_messages.py** — Parse hand-typed message text files into JSON
+Welcome! This guide is for anyone who wants to analyze their own communication data without needing to know how to code.
 
-All scripts accept `--config` for case-specific configuration. Run with `--help` for details.
+**Prerequisites**: You will need a computer (Windows/Mac/Linux) and basic familiarity with using the terminal/command prompt.
 
----
+## Step 1: Get Your Data
 
-## Tools (in tools/ folder)
+To analyze your messages, you first need to export them from your phone.
 
-Diagnostic and data-extraction utilities for working with source data.
+### For Android Users (SMS/MMS)
+1.  Download **SMS Backup & Restore** from the Play Store.
+2.  Open the app and tap **Backup**.
+3.  Select "Text Messages" (and "Call Logs" if desired).
+4.  Choose "Local Backup" and save the XML file to your phone.
+5.  Transfer this file (`sms_backup.xml`) to your computer.
 
-- **explore_sms.py** — Inspect SMS backup XML database tables
-- **debug_xml.py** — Debug and inspect XML data files
-- **explore_signal.py** / **explore_db.py** — Browse Signal Desktop SQLCipher databases
-- **extract_signal_desktop.py** / **read_signal_desktop.py** — Read Signal Desktop messages
-- **extract_desktop_messages.py** — Extract messages from desktop export
-- **decrypt_signal_key.py** — Decrypt Signal Desktop encryption key
-- **deep_signal_check.py** / **deep_signal_check2.py** — Deep inspection of Signal data
-- **redact_number.py** — Redact phone numbers from output files
+### For Signal Users
+1.  See our [Signal Extraction Guide](docs/signal_extraction.md) (coming soon) or use the `signal_desktop_extractor.py` script if you have Signal Desktop installed.
 
-All tools accept command-line arguments. Run with `--help` for usage.
+## Step 2: Install the Toolkit
 
----
+1.  Download and install **Python** from [python.org](https://www.python.org/downloads/). (Make sure to check "Add Python to PATH" during installation).
+2.  Download this toolkit as a ZIP file from GitHub (click the green "Code" button -> "Download ZIP") and extract it.
+3.  Open your terminal (Command Prompt on Windows, Terminal on Mac).
+4.  Navigate to the extracted folder:
+    ```bash
+    cd Downloads/Communication-Analysis-Toolkit
+    ```
+5.  Install the required software:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## Installation
+## Step 3: Set Up Your Case
 
-```bash
-pip install -r requirements.txt
-```
+Think of a "case" as a folder for one specific relationship or investigation.
 
-Required: `defusedxml`. Optional: `pycryptodome` (for Signal Desktop decryption).
+1.  Create a folder named `my_case` inside the `cases/` folder.
+2.  Inside `my_case`, create a folder named `source_data`.
+3.  Copy your `sms_backup.xml` file into `cases/my_case/source_data/`.
+4.  Create a simple text file named `config.json` inside `cases/my_case/` with this content:
+    *(You can use Notepad or TextEdit)*
 
----
+    ```json
+    {
+        "case_name": "My Relationship Analysis",
+        "user_label": "Me",
+        "contact_label": "Them",
+        "sms_xml": "./cases/my_case/source_data/sms_backup.xml",
+        "output_dir": "./cases/my_case/output",
+        "date_start": "2020-01-01",
+        "date_end": "2025-12-31"
+    }
+    ```
 
-## How Pattern Detection Works
+## Step 4: Run the Analysis
 
-The engine uses **context-aware regex matching** with validation functions and context filters to reduce false positives:
-
-1. **Hurtful Language**: Only flags words directed AT a person (e.g., "fuck you" is flagged; "that movie was fucking great" is not)
-2. **DARVO**: Requires manipulative context, not casual conversation
-3. **Gottman's Horsemen**: Distinguishes character attacks from behavior feedback
-4. **Coercive Control**: Flags controlling language about the other person's autonomy
-5. **Context Filters**: Apologies, self-directed negativity, third-party venting, jokes, banter, de-escalation, and hurt expression are recognized and suppress false positives
-
-Each detected pattern includes:
-- Pattern category and clinical source
-- Matched text snippet
-- Full message for context
-- Severity rating (1-10)
-
----
-
-## References
-
-1. Freyd, J.J. (1997). *Violations of power, adaptive blindness, and betrayal trauma theory.* Feminism & Psychology.
-2. Gottman, J.M. & Silver, N. (1999). *The Seven Principles for Making Marriage Work.* Harmony Books.
-3. Stark, E. (2007). *Coercive Control.* Oxford University Press.
-4. Stern, R. (2007). *The Gaslight Effect.* Harmony Books.
-5. Bancroft, L. (2002). *Why Does He Do That?* Berkley Books.
-6. Arabi, S. (2017). *Becoming the Narcissist's Nightmare.* SCW Archer Publishing.
-7. Forward, S. & Frazier, D. (1997). *Emotional Blackmail.* Harper Collins.
-8. APA (2013). *DSM-5.* American Psychiatric Association.
-9. Domestic Abuse Intervention Programs (1981). *Duluth Model Power and Control Wheel.*
-10. Bateson, G. (1956). *Toward a Theory of Schizophrenia.* Behavioral Science.
-
----
-
-## Development
-
-### Running Tests
-
-We use `pytest` for testing. The suite covers unit tests, integration tests, and "golden answer" regression tests.
+In your terminal, run this command:
 
 ```bash
-# Run all tests
-pytest
-
-# Run only the Agent integration tests
-pytest tests/test_agent_questions.py
+python -m engine.analyzer --config cases/my_case/config.json
 ```
 
-### Linting & Formatting
+It will process your messages and tell you when it's done.
 
-We use `ruff` for fast linting and formatting, and `mypy` for static type checking.
+## Step 5: Read Your Reports
 
-```bash
-# Linting
-ruff check .
+Go to the `cases/my_case/output/` folder. You will find several files:
 
-# Formatting
-ruff format .
+*   **`TIMELINE.md`**: A story-like view of your relationship day-by-day. Open this in any Markdown viewer or text editor. It highlights arguments, pattern escalations, and mood shifts.
+*   **`ANALYSIS.md`**: The numbers. How many messages? Who engaged more? What patterns appeared most often?
+*   **`EVIDENCE.md`**: The specific texts. Every time the system flagged a high-conflict pattern (like gaslighting or severe insults), it's listed here with the date and message content.
 
-# Type Checking (Strict)
-mypy .
-```
-
----
-
-### AI-Assisted Development
-This project uses AI-assisted development tools for code generation, testing, and documentation. All architecture decisions, code review, debugging, and testing verification are performed by the author.
+Questions? Check the [Summary (Part 1)](docs/summary.md) to understand what the patterns mean.
 
 ---
 

@@ -126,3 +126,21 @@ class PatternsResponse(BaseModel):
 class HurtfulResponse(BaseModel):
     from_user: list[HurtfulItem] = Field(default_factory=list)
     from_contact: list[HurtfulItem] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Agent schemas
+# ---------------------------------------------------------------------------
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+
+
+class AskResponse(BaseModel):
+    answer: str
+    layer: int
+    confidence: float = 1.0
+    evidence: list[str] = Field(default_factory=list)
+    messages_searched: int = 0
+    filters_applied: list[str] = Field(default_factory=list)

@@ -6,9 +6,7 @@ emotional_blackmail, silent_treatment, double_bind, prank_test,
 selective_memory, catastrophizing, demand_compliance.
 """
 
-import pytest
 from engine.patterns import detect_patterns
-
 
 # ==============================================================================
 # GUILT TRIP (3 tests)

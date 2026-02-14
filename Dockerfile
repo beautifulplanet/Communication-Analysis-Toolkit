@@ -15,6 +15,12 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /build
 
+# Install build dependencies for pysqlcipher3
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libsqlcipher-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy only dependency manifests first (layer caching)
 COPY pyproject.toml README.md ./
 COPY engine/ engine/
@@ -29,6 +35,11 @@ RUN python -m venv /opt/venv \
 # Stage 2 — Runtime (no build tools, no pip cache)
 # ---------------------------------------------------------------------------
 FROM python:3.12-slim AS runtime
+
+# Install runtime dependencies for sqlcipher
+RUN apt-get update && apt-get install -y \
+    libsqlcipher0 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Security: run as non-root
 RUN groupadd --gid 1000 analyst \

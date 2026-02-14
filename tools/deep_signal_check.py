@@ -3,11 +3,9 @@ Deep investigation: Is the Signal backup supposed to have all messages?
 Check everything - message table schema, all possible message storage,
 the decryption tool output, and whether messages were deleted vs never extracted.
 """
-import sqlite3
-import os
-import json
-import struct
 import argparse
+import os
+import sqlite3
 
 parser = argparse.ArgumentParser(description='Deep investigation of Signal backup database')
 parser.add_argument('db_path', help='Path to the SQLite database')
@@ -123,7 +121,7 @@ parent_dir = os.path.dirname(EXPORT_DIR)
 for f in sbt_files:
     fpath = os.path.join(parent_dir, f)
     if os.path.exists(fpath):
-        with open(fpath, 'r', encoding='utf-8', errors='replace') as fh:
+        with open(fpath, encoding='utf-8', errors='replace') as fh:
             content = fh.read()
         print(f"\n   === {f} ({len(content)} chars) ===")
         # Show first 2000 chars and last 1000

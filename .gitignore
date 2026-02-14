@@ -1,6 +1,8 @@
 # Data & output — never commit personal communication data
 cases/*/source_data/
+cases/*/source_data/
 cases/*/output/
+cases/private_*/
 *.xml
 *.sqlite
 *.db

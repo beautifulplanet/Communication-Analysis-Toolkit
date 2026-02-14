@@ -62,7 +62,7 @@ PATTERN CATEGORIES:
 """
 
 import re
-from typing import Optional
+from typing import Any, Optional
 
 # Type alias: (pattern_category, matched_text, full_message)
 PatternMatch = tuple[str, str, str]
@@ -752,7 +752,7 @@ def is_expressing_hurt(body: str) -> bool:
     return any(re.search(pat, lower) for pat in hurt_patterns)
 
 
-def is_joke_context(msg_idx: int, all_msgs: list, window: int = 3) -> bool:
+def is_joke_context(msg_idx: int, all_msgs: list[Any], window: int = 3) -> bool:
     """
     Check if a message is in a joking/playful context by looking at surrounding messages.
     Returns True if laughter/playful signals are nearby (2+ in window).
@@ -777,7 +777,7 @@ def is_joke_context(msg_idx: int, all_msgs: list, window: int = 3) -> bool:
     return laugh_count >= 2
 
 
-def is_banter(msg_idx: int, all_msgs: list, window: int = 4) -> bool:
+def is_banter(msg_idx: int, all_msgs: list[Any], window: int = 4) -> bool:
     """
     Check if messages around this index are playful banter (both sides laughing).
     Returns True if both people are engaged in light exchanges.
@@ -809,7 +809,7 @@ def detect_patterns(
     body: str,
     direction: str,
     msg_idx: int = -1,
-    all_msgs: Optional[list] = None,
+    all_msgs: Optional[list[Any]] = None,
 ) -> list[PatternMatch]:
     """
     Run all pattern detection categories against a message with optional
@@ -867,7 +867,7 @@ def detect_patterns(
         return _apology or _self or _third or _de_esc or _hurt or _joke or _banter_flag
 
     # Helper: run a list of simple regex patterns
-    def run_simple(patterns, category):
+    def run_simple(patterns: list[str], category: str) -> None:
         if _skip_mild(category):
             return
         for p in patterns:
@@ -876,7 +876,7 @@ def detect_patterns(
                 results.append((category, m.group(), body))
 
     # Helper: run patterns with optional validators
-    def run_validated(patterns, category):
+    def run_validated(patterns: list[Any], category: str) -> None:
         if _skip_mild(category):
             return
         for item in patterns:
@@ -885,9 +885,8 @@ def detect_patterns(
             else:
                 p, validator = item, None
             m = re.search(p, lower)
-            if m:
-                if validator is None or validator(m):
-                    results.append((category, m.group(), body))
+            if m and (validator is None or validator(m)):
+                results.append((category, m.group(), body))
 
     # ── Core DARVO ──
     run_simple(DENY_PATTERNS, "deny")

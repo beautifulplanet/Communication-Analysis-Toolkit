@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # Redis message broker
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # Celery Worker
+  worker:
+    build: .
+    command: celery -A engine.tasks worker --loglevel=info
+    volumes:
+      - ./cases:/app/cases
+      - ./output:/app/output
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Update API to know about Redis
+  api:
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis

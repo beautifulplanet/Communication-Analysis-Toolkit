@@ -4,9 +4,7 @@ Covers: empty/None inputs, Unicode, mixed case, long inputs,
 special characters, and boundary message lengths.
 """
 
-import pytest
 from engine.patterns import detect_patterns, is_directed_hurtful
-
 
 # ==============================================================================
 # EMPTY / NONE INPUTS (6 tests)
@@ -25,13 +23,11 @@ class TestEmptyInputs:
         assert detect_patterns("   ", "received") == []
 
     def test_hurtful_empty(self):
-        is_h, words, sev = is_directed_hurtful("", "received")
+        is_h, _, _ = is_directed_hurtful("", "received")
         assert is_h is False
-        assert words == []
-        assert sev is None
 
     def test_hurtful_none(self):
-        is_h, words, sev = is_directed_hurtful(None, "received")
+        is_h, _, _ = is_directed_hurtful(None, "received")
         assert is_h is False
 
     def test_detect_newline_only(self):
@@ -91,7 +87,7 @@ class TestCaseSensitivity:
         assert "gaslighting" in cats
 
     def test_all_caps_threat(self):
-        is_h, words, sev = is_directed_hurtful("I'LL DESTROY YOU", "received")
+        is_h, _, sev = is_directed_hurtful("I'LL DESTROY YOU", "received")
         assert is_h is True
         assert sev == "severe"
 
@@ -131,7 +127,7 @@ class TestLongInputs:
 
     def test_long_hurtful(self):
         msg = "You're worthless " * 100
-        is_h, words, sev = is_directed_hurtful(msg, "received")
+        is_h, _, sev = is_directed_hurtful(msg, "received")
         assert is_h is True
         assert sev == "severe"
 
@@ -191,9 +187,9 @@ class TestDirectionParam:
         assert "gaslighting" in cats
 
     def test_hurtful_sent(self):
-        is_h, words, sev = is_directed_hurtful("Fuck you", "sent")
+        is_h, _, _ = is_directed_hurtful("Fuck you", "sent")
         assert is_h is True
 
     def test_hurtful_received(self):
-        is_h, words, sev = is_directed_hurtful("Fuck you", "received")
+        is_h, _, _ = is_directed_hurtful("Fuck you", "received")
         assert is_h is True

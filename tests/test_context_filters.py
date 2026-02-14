@@ -5,18 +5,16 @@ is_de_escalation, is_expressing_hurt, is_joke_context, is_banter
 correctly classify messages to reduce false positives.
 """
 
-import pytest
 from engine.patterns import (
+    detect_patterns,
     is_apology,
-    is_self_directed,
-    is_third_party_venting,
+    is_banter,
     is_de_escalation,
     is_expressing_hurt,
     is_joke_context,
-    is_banter,
-    detect_patterns,
+    is_self_directed,
+    is_third_party_venting,
 )
-
 
 # ==============================================================================
 # is_apology (6 tests)

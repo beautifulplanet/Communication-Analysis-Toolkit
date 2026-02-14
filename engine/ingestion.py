@@ -68,7 +68,7 @@ def parse_sms(path: str, config: dict[str, Any]) -> list[MessageDict]:
     except FileNotFoundError:
         logger.warning("sms_file_not_found", path=path)
         return []
-    for event, elem in context:
+    for _, elem in context:
         if elem.tag == "sms":
             addr = elem.get("address", "")
             if phone_match(addr, suffix) or (contact_phone and contact_phone in addr):
@@ -111,7 +111,7 @@ def parse_calls(path: str, config: dict[str, Any]) -> list[CallDict]:
 
     _parse = SafeET.iterparse if SafeET else ET.iterparse
     context = _parse(path, events=("end",))
-    for event, elem in context:
+    for _, elem in context:
         if elem.tag == "call":
             number = elem.get("number", "")
             if phone_match(number, suffix) or (contact_phone and contact_phone in number):

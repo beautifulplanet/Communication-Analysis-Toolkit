@@ -1,12 +1,8 @@
 """
 Extract messages from Signal Desktop's SQLCipher database.
 """
-import json
-import os
-import sys
-import re
 import argparse
-from datetime import datetime
+import re
 
 
 def _validate_hex_key(key: str) -> str:
@@ -36,6 +32,7 @@ print(f"Opening database: {db_path}")
 print(f"Key length: {len(db_key)} chars")
 
 import sqlcipher3
+
 conn = sqlcipher3.connect(db_path)
 cursor = conn.cursor()
 

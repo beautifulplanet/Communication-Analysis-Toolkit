@@ -6,13 +6,13 @@ parse_json_messages, and security guardrails.
 
 import json
 import os
-import pytest
 import tempfile
 from unittest.mock import patch
 
-from engine.config import escape_md, load_config, DEFAULT_CONFIG
-from engine.ingestion import phone_match, parse_sms, parse_json_messages
+import pytest
 
+from engine.config import escape_md, load_config
+from engine.ingestion import parse_json_messages, parse_sms, phone_match
 
 # ==============================================================================
 # escape_md (5 tests)

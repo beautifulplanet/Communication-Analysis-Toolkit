@@ -4,7 +4,6 @@ Covers all subcategories: reality denial, sanity questioning,
 sensitivity shaming, joke deflection, social consensus weaponizing.
 """
 
-import pytest
 from engine.patterns import detect_patterns
 
 

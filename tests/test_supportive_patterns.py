@@ -3,14 +3,12 @@ Tests for Supportive Pattern Detection — 110 tests.
 Covers all 14 supportive categories plus benign/no-match checks.
 """
 
-import pytest
 from engine.patterns_supportive import (
-    detect_supportive_patterns,
-    SUPPORTIVE_LABELS,
     SUPPORTIVE_DESCRIPTIONS,
+    SUPPORTIVE_LABELS,
     SUPPORTIVE_VALUE,
+    detect_supportive_patterns,
 )
-
 
 # ==============================================================================
 # VALIDATION (8 tests)
@@ -698,8 +696,9 @@ class TestSupportiveMetadata:
             assert 1 <= val <= 10, f"Value for '{cat}' is {val}, expected 1-10"
 
     def test_labels_are_strings(self):
-        for cat, label in SUPPORTIVE_LABELS.items():
-            assert isinstance(label, str) and len(label) > 0
+        for _cat, label in SUPPORTIVE_LABELS.items():
+            assert isinstance(label, str)
+            assert len(label) > 0
 
 
 # ==============================================================================

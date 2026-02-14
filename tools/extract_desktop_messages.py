@@ -4,11 +4,11 @@ Exports both sent AND received messages with timestamps.
 
 Usage: python extract_desktop_messages.py --key-file KEY_FILE --db-path DB_PATH --phone PHONE --output-dir DIR
 """
+import argparse
 import json
 import os
-import sys
 import re
-import argparse
+import sys
 from datetime import datetime, timezone
 
 

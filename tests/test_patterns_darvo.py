@@ -3,9 +3,7 @@ Tests for DARVO pattern detection: Deny, Attack, Reverse Victim & Offender.
 Based on Freyd (1997) — 30 tests.
 """
 
-import pytest
 from engine.patterns import detect_patterns
-
 
 # ==============================================================================
 # DENY PATTERNS (10 tests)

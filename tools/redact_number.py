@@ -1,23 +1,24 @@
-import os
 import argparse
+import os
+
 
 def redact_files(target_dir, phone_number):
     redaction = "[REDACTED_NUMBER]"
     print(f"Scanning {target_dir} for phone number...")
     count = 0
-    
+
     for filename in os.listdir(target_dir):
         filepath = os.path.join(target_dir, filename)
-        
+
         if os.path.isfile(filepath):
             try:
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, encoding='utf-8') as f:
                     content = f.read()
-                
+
                 if phone_number in content:
                     print(f"Redacting from {filename}...")
                     new_content = content.replace(phone_number, redaction)
-                    
+
                     with open(filepath, 'w', encoding='utf-8') as f:
                         f.write(new_content)
                     count += 1

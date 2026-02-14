@@ -3,9 +3,7 @@ Tests for Gottman's Four Horsemen pattern detection (Gottman & Silver, 1999).
 Criticism, Contempt, Defensiveness, Stonewalling — 30 tests.
 """
 
-import pytest
 from engine.patterns import detect_patterns
-
 
 # ==============================================================================
 # CRITICISM (8 tests)

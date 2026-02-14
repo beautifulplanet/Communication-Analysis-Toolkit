@@ -4,7 +4,6 @@ Verifies combined positive + negative detection, Gottman ratio,
 and health score calculations.
 """
 
-import pytest
 from engine.patterns import detect_patterns
 from engine.patterns_supportive import detect_supportive_patterns
 from engine.relationship_health import (
@@ -12,7 +11,6 @@ from engine.relationship_health import (
     calculate_gottman_ratio,
     calculate_health_score,
 )
-
 
 # ==============================================================================
 # BIDIRECTIONAL DETECTION (10 tests)

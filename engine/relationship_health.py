@@ -17,7 +17,7 @@ REFERENCES:
 ================================================================================
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 from engine.patterns import PATTERN_SEVERITY, detect_patterns
 from engine.patterns_supportive import (
@@ -30,8 +30,8 @@ def analyze_message_health(
     body: str,
     direction: str,
     msg_idx: int = -1,
-    all_msgs: Optional[list] = None,
-) -> dict:
+    all_msgs: Optional[list[Any]] = None,
+) -> dict[str, Any]:
     """
     Analyze a single message for both negative and supportive patterns.
 
@@ -54,8 +54,8 @@ def analyze_message_health(
 
 
 def calculate_gottman_ratio(
-    messages: list[dict],
-) -> dict:
+    messages: list[dict[str, Any]],
+) -> dict[str, Any]:
     """
     Calculate a text-based positive-to-negative pattern ratio.
 
@@ -128,16 +128,16 @@ def calculate_gottman_ratio(
 
 
 def calculate_health_score(
-    messages: list[dict],
-) -> dict:
+    messages: list[dict[str, Any]],
+) -> dict[str, Any]:
     """
-    Calculate an overall relationship health score (0–100).
+    Calculate an overall relationship health score (0-100).
 
     Scoring factors:
-      1. Gottman ratio contribution (0–40 points)
-      2. Positive pattern diversity (0–20 points)
-      3. Absence of high-severity negatives (0–20 points)
-      4. Balance between both parties (0–20 points)
+      1. Gottman ratio contribution (0-40 points)
+      2. Positive pattern diversity (0-20 points)
+      3. Absence of high-severity negatives (0-20 points)
+      4. Balance between both parties (0-20 points)
 
     Returns:
         Dict with score, grade, factors breakdown, and recommendations.
@@ -146,9 +146,7 @@ def calculate_health_score(
     ratio = ratio_data["ratio"]
 
     # Factor 1: Gottman ratio (0-40 points)
-    if ratio == float("inf"):
-        ratio_score = 40
-    elif ratio >= 5.0:
+    if ratio == float("inf") or ratio >= 5.0:
         ratio_score = 40
     elif ratio >= 3.0:
         ratio_score = int(20 + (ratio - 3.0) * 10)  # 20-40

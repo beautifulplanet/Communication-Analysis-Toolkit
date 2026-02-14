@@ -89,7 +89,7 @@ def _check_consent(skip: bool = False) -> bool:
     return False
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Communication Analysis Toolkit")
     parser.add_argument("--config", type=str, help="Path to case config.json")
     parser.add_argument(
@@ -107,6 +107,8 @@ def main():
 
     try:
         run_analysis(args.config)
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except Exception as e:
         logger.exception("analysis_failed", error=str(e))
         sys.exit(1)

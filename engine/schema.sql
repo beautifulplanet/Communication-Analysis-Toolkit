@@ -39,6 +39,23 @@ CREATE TABLE IF NOT EXISTS messages (
     FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
 );
 
+-- 2b. CALLS: Phone and Signal call logs
+CREATE TABLE IF NOT EXISTS calls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    case_id INTEGER NOT NULL,
+    
+    timestamp INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    time TEXT NOT NULL,
+    
+    source TEXT NOT NULL,                -- 'phone', 'signal'
+    direction TEXT NOT NULL,             -- 'incoming', 'outgoing', 'missed'
+    duration INTEGER DEFAULT 0,
+    call_type TEXT DEFAULT 'audio_call', -- 'audio_call', 'video_call'
+    
+    FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_messages_case_date ON messages(case_id, date);
 CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);
@@ -57,6 +74,7 @@ CREATE TABLE IF NOT EXISTS message_analysis (
     -- JSON blobs for complex structures (Lists of strings)
     patterns_json TEXT DEFAULT '[]',     -- e.g. ["gaslighting", "darvo"]
     keywords_json TEXT DEFAULT '[]',     -- e.g. ["idiot", "always"]
+    supportive_json TEXT DEFAULT '[]',   -- e.g. ["validation", "empathy"]
     
     FOREIGN KEY(message_id) REFERENCES messages(id) ON DELETE CASCADE
 );

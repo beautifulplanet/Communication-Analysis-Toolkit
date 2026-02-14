@@ -5,9 +5,10 @@ Verifies that the full pipeline works correctly with realistic data.
 
 import json
 import os
-import pytest
-from engine.patterns import detect_patterns, is_directed_hurtful, PATTERN_LABELS, PATTERN_SEVERITY
 
+import pytest
+
+from engine.patterns import PATTERN_LABELS, PATTERN_SEVERITY, detect_patterns, is_directed_hurtful
 
 # ==============================================================================
 # FULL PIPELINE (6 tests)
@@ -19,7 +20,7 @@ class TestFullPipeline:
     @pytest.fixture
     def sample_messages(self):
         fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures', 'sample_messages.json')
-        with open(fixture_path, 'r') as f:
+        with open(fixture_path) as f:
             return json.load(f)
 
     def test_fixture_loads(self, sample_messages):
@@ -45,7 +46,7 @@ class TestFullPipeline:
         """Run is_directed_hurtful on every message — should find some hurtful."""
         hurtful_count = 0
         for msg in sample_messages:
-            is_h, words, sev = is_directed_hurtful(msg["body"], msg["direction"])
+            is_h, _, _ = is_directed_hurtful(msg["body"], msg["direction"])
             if is_h:
                 hurtful_count += 1
         # "no one will ever love you" should trigger at minimum
@@ -92,7 +93,7 @@ class TestPatternMetadata:
             ("You always ruin everything", "criticism"),
             ("This conversation is over", "stonewalling"),
         ]
-        for msg, expected_cat in messages:
+        for msg, _ in messages:
             hits = detect_patterns(msg, "received")
             for cat, _, _ in hits:
                 assert cat in PATTERN_LABELS, f"Category '{cat}' missing from PATTERN_LABELS"

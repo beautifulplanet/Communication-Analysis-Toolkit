@@ -1,11 +1,10 @@
 
 import xml.etree.ElementTree as ET
+
 try:
     import defusedxml.ElementTree as SafeET
 except ImportError:
     SafeET = None
-import os
-import sys
 import argparse
 
 parser = argparse.ArgumentParser(description='Debug/validate an SMS XML backup file')

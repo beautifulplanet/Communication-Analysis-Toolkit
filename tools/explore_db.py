@@ -1,7 +1,5 @@
-import sqlite3
-import json
 import argparse
-from datetime import datetime
+import sqlite3
 
 parser = argparse.ArgumentParser(description='Explore a Signal export SQLite database')
 parser.add_argument('db_path', help='Path to the SQLite database')

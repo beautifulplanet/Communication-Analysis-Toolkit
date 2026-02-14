@@ -1,9 +1,8 @@
 """
 Signal database explorer - fixed version
 """
-import sqlite3
-import json
 import argparse
+import sqlite3
 from datetime import datetime
 
 parser = argparse.ArgumentParser(description='Explore Signal export database tables')

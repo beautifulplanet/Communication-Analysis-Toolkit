@@ -1,8 +1,8 @@
 """Deep investigation part 2 — fix column names and check remaining items."""
-import sqlite3
+import argparse
 import os
 import re
-import argparse
+import sqlite3
 
 parser = argparse.ArgumentParser(description='Deep Signal database investigation part 2')
 parser.add_argument('db_path', help='Path to the SQLite database')
@@ -58,7 +58,7 @@ for fname in ['sbt_stdout.txt', 'sbt_stderr.txt']:
     fpath = os.path.join(parent_dir, fname)
     if os.path.exists(fpath):
         size = os.path.getsize(fpath)
-        with open(fpath, 'r', encoding='utf-8', errors='replace') as f:
+        with open(fpath, encoding='utf-8', errors='replace') as f:
             content = f.read()
         print(f"\n   === {fname} ({size:,} bytes, {len(content)} chars) ===")
         if len(content) > 4000:
@@ -97,7 +97,7 @@ for root, dirs, files in os.walk(scan_dir):
         continue
     for f in files:
         lower = f.lower()
-        if '.backup' in lower or lower.endswith('.bin') or 'signal' in lower and lower.endswith('.bak'):
+        if '.backup' in lower or lower.endswith('.bin') or ('signal' in lower and lower.endswith('.bak')):
             fpath = os.path.join(root, f)
             size = os.path.getsize(fpath)
             print(f"   {fpath} ({size:,} bytes)")
@@ -106,7 +106,7 @@ for root, dirs, files in os.walk(scan_dir):
 print("\n14. SBT_HELP.TXT:")
 fpath = os.path.join(parent_dir, "sbt_help.txt")
 if os.path.exists(fpath):
-    with open(fpath, 'r', encoding='utf-8', errors='replace') as f:
+    with open(fpath, encoding='utf-8', errors='replace') as f:
         content = f.read()
     # Find relevant lines about export/output options
     for line in content.split('\n'):

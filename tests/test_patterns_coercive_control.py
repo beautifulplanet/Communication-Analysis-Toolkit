@@ -3,9 +3,7 @@ Tests for Coercive Control pattern detection (Stark, 2007; Duluth Model).
 Control & isolation, financial control, weaponizing family — 25 tests.
 """
 
-import pytest
 from engine.patterns import detect_patterns
-
 
 # ==============================================================================
 # CONTROL & ISOLATION (10 tests)

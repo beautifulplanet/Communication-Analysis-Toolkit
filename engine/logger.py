@@ -48,7 +48,7 @@ def setup_logging(json_output: bool = False, verbose: bool = False) -> Any:
         processors.append(structlog.dev.ConsoleRenderer(colors=True))
 
     structlog.configure(
-        processors=processors,  # type: ignore
+        processors=processors,
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,

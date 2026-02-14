@@ -24,9 +24,11 @@ OUTPUT:
 
 import os
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, Optional
 
 from engine.config import DEFAULT_CONFIG, load_config
+from engine.db import init_db
 
 # ==============================================================================
 # DATA INGESTION
@@ -53,10 +55,8 @@ from engine.reporting import (
     generate_timeline,
     save_data_json,
 )
-from engine.types import CallDict, DayData, GapData, HurtfulEntry, MessageDict, PatternEntry
-from engine.db import init_db
 from engine.storage import CaseStorage
-from pathlib import Path
+from engine.types import CallDict, DayData, GapData, HurtfulEntry, MessageDict, PatternEntry
 
 # ==============================================================================
 # ANALYSIS ENGINE
@@ -257,31 +257,73 @@ def run_analysis(config_path: Optional[str] = None, use_db: bool = False) -> Non
     )
 
     logger.info("data_loaded", message_count=len(all_texts), call_count=len(all_calls))
-    
+
     # ── DB Ingestion ──
     if use_db:
         db_path = Path(config["output_dir"]) / "cases.db"
         logger.info("db_ingestion_started", db_path=str(db_path))
-        
+
         init_db(db_path)
         store = CaseStorage(db_path)
-        
+
         case_id = store.create_case(
             name=config["case_name"],
             user_name=config["user_label"],
             contact_name=config["contact_label"],
             source_path=config_path or "manual_config"
         )
-        
+
         # Optimization: In the future, we can use a transaction here.
         # For now, relying on CaseStorage's internal connection management.
-        
-        count = 0 
+
+        # Insert calls
+        call_count = 0
+        for call in all_calls:
+            try:
+                store.add_call(case_id, dict(call))
+                call_count += 1
+            except Exception as e:
+                logger.warning("db_insert_call_failed", error=str(e))
+
+        # Insert messages + Analysis
+        count = 0
         for msg in all_texts:
-            store.add_message(case_id, msg)
-            count += 1
-            
-        logger.info("db_ingestion_complete", inserted_messages=count)
+            try:
+                msg_id = store.add_message(case_id, msg)
+                count += 1
+
+                # Run analysis for DB (matches logic in analyze_all)
+                body = msg.get("body", "")
+                direction = msg.get("direction", "unknown")
+
+                # Hurtful
+                is_h, _, sev = is_directed_hurtful(body, direction)
+
+                # Patterns
+                p_results = detect_patterns(body, direction)
+                patterns_list = [p[0] for p in p_results] if p_results else []
+
+                # Supportive Patterns
+                s_results = detect_supportive_patterns(body, direction)
+                supportive_list = [s[0] for s in s_results] if s_results else []
+
+                # Basic apology detection
+                is_apology = any(w in body.lower() for w in ["sorry", "apologize", "apology"])
+
+                analysis = {
+                    "is_hurtful": is_h,
+                    "severity": sev,
+                    "is_apology": is_apology,
+                    "patterns": patterns_list,
+                    "supportive": supportive_list,
+                    "keywords": []
+                }
+                store.add_analysis(msg_id, analysis)
+
+            except Exception as e:
+                logger.warning("db_insert_msg_failed", error=str(e))
+
+        logger.info("db_ingestion_complete", inserted_messages=count, inserted_calls=call_count)
 
     # ── Step 2: Analyze ──
     # ── Step 2: Analyze ──
@@ -339,19 +381,20 @@ def run_analysis(config_path: Optional[str] = None, use_db: bool = False) -> Non
 if __name__ == "__main__":
     import argparse
     import sys
+
     from engine.db import init_db
     from engine.storage import CaseStorage
-    
+
     parser = argparse.ArgumentParser(description="Communication Analysis Toolkit")
     parser.add_argument("--config", help="Path to config.json")
     parser.add_argument("--use-db", action="store_true", help="Use SQLite database for storage")
     args = parser.parse_args()
-    
+
     try:
         # If --use-db is set, we need to pass this down or handle it here.
-        # Since run_analysis currently only takes config_path, best to refactor 
-        # run_analysis to accept kwargs or modify it. 
-        # For now, let's modify run_analysis signature in the next step, 
+        # Since run_analysis currently only takes config_path, best to refactor
+        # run_analysis to accept kwargs or modify it.
+        # For now, let's modify run_analysis signature in the next step,
         # and just pass the flag here.
         run_analysis(args.config, use_db=args.use_db)
     except Exception as e:

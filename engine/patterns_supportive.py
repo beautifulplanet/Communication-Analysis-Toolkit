@@ -41,7 +41,7 @@ SUPPORTIVE CATEGORIES:
 """
 
 import re
-from typing import Optional
+from typing import Any, Optional
 
 # Type alias: (supportive_category, matched_text, full_message)
 SupportiveMatch = tuple[str, str, str]
@@ -52,9 +52,9 @@ SupportiveMatch = tuple[str, str, str]
 # ==============================================================================
 
 VALIDATION_PATTERNS = [
-    r"\bthat\s+makes\s+sense\b",
-    r"\bi\s+(can\s+)?understand\s+(why|how|that|what)\b",
-    r"\byour\s+feelings\s+are\s+valid\b",
+    r"\bthat\s+makes\s+(so\s+much\s+|perfect\s+)?sense\b",
+    r"\bi\s+(can\s+)?(really\s+|totally\s+|completely\s+|truly\s+)?understand\s+(why|how|that|what)\b",
+    r"\byour\s+feelings\s+are\s+(so\s+)?valid\b",
     r"\bi\s+(totally\s+|completely\s+)?get\s+(why|how|that|it)\b",
     r"\byou\s+have\s+every\s+right\s+to\s+(feel|be)\b",
     r"\bthat.?s\s+(completely\s+|totally\s+)?(understandable|reasonable|fair|valid)\b",
@@ -63,6 +63,9 @@ VALIDATION_PATTERNS = [
     r"\bthat\s+sounds\s+(really\s+)?(hard|tough|difficult|frustrating|stressful)\b",
     r"\bi\s+hear\s+you\b",
 ]
+
+# ... (skip to next section if needed, or use separate chunks)
+
 
 
 # ==============================================================================
@@ -85,12 +88,12 @@ EMPATHY_PATTERNS = [
 # ==============================================================================
 
 APPRECIATION_PATTERNS = [
-    r"\bi\s+appreciate\s+(you|that|everything|what\s+you)\b",
+    r"\bi\s+(really\s+|truly\s+|so\s+)?appreciate\s+(you|that|everything|what\s+you)\b",
     r"\bthank\s+you\s+(so\s+much\s+)?for\s+(being|doing|helping|listening|understanding|supporting|always|everything|your)\b",
     r"\bi.?m\s+(so\s+)?(thankful|grateful)\s+(for\s+you|to\s+have|that\s+you)\b",
     r"\byou\s+mean\s+(so\s+much|the\s+world|everything)\s+to\s+me\b",
     r"\bi\s+don.?t\s+(take|want\s+to\s+take)\s+you\s+for\s+granted\b",
-    r"\bi\s+value\s+(you|your|our|what\s+you|this)\b",
+    r"\bi\s+(really\s+|truly\s+)?value\s+(you|your|our|what\s+you|this)\b",
     r"\byou\s+make\s+(my\s+)?life\s+(so\s+much\s+)?better\b",
     r"\bi.?m\s+(so\s+)?lucky\s+to\s+have\s+you\b",
 ]
@@ -254,6 +257,8 @@ REASSURANCE_PATTERNS = [
 GRATITUDE_PATTERNS = [
     r"\bthank\s+you\b",
     r"\bthanks\s+(so\s+much|a\s+lot|for\s+everything|for\s+being|babe|love)\b",
+    r"\bthanks,?\s+i\s+try\b",
+    r"\bthanks\b",
     r"\bi\s+can.?t\s+thank\s+you\s+enough\b",
     r"\byou.?re\s+the\s+best\b",
     r"\b(that|this)\s+means\s+(so\s+much|a\s+lot|the\s+world|everything)\s+to\s+me\b",
@@ -286,7 +291,7 @@ def detect_supportive_patterns(
     body: str,
     direction: str,
     msg_idx: int = -1,
-    all_msgs: Optional[list] = None,
+    all_msgs: Optional[list[Any]] = None,
 ) -> list[SupportiveMatch]:
     """
     Detect positive/supportive communication patterns in a message.
@@ -310,7 +315,7 @@ def detect_supportive_patterns(
     lower = body.lower().strip()
     results: list[SupportiveMatch] = []
 
-    def run(patterns, category):
+    def run(patterns: list[str], category: str) -> None:
         for p in patterns:
             m = re.search(p, lower)
             if m:
