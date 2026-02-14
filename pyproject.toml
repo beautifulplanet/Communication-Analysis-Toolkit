@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "comms-toolkit"
 version = "3.1.0"
-description = "Clinical-grade communication analysis toolkit for detecting behavioral patterns in text-based communication."
+description = "A research-informed analysis engine for text-based communication."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
 authors = [
-    {name = "Communication Analysis Team"},
+    {name = "Communication Analysis Team", email = "research@example.com"},
 ]
 keywords = [
     "nlp",
@@ -97,6 +97,7 @@ exclude = ["tests*", "old_unused*", "build_tools*", "tools*"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+exclude = ["tools", "active", "build", "dist"]
 
 [tool.ruff.lint]
 select = [
@@ -105,6 +106,14 @@ select = [
     "W",   # pycodestyle warnings
     "I",   # isort (import sorting)
     "UP",  # pyupgrade (modernize syntax)
+    "B",   # bugbear
+    "SIM", # simplify
+    "PT",  # pytest-style
+    "A",   # builtins
+    "PIE", # misc
+    "RET", # return
+    "SLF", # self
+    "RUF", # ruff specific
 ]
 ignore = [
     "E501",  # line too long — we handle this with line-length setting

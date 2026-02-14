@@ -38,3 +38,8 @@ AI_PROMPTS.md
 
 # Consent attestation (user-specific)
 .consent
+
+# Environment variables
+.env
+.env.local
+.env.*

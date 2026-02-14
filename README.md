@@ -1,10 +1,16 @@
 # Communication Analysis Toolkit
 
-**Version 3.0.0**
+[![CI](https://github.com/beautifulplanet/Communication-Analysis-Toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/beautifulplanet/Communication-Analysis-Toolkit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code Style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+**Version 3.1.0**
 .
-A clinical-grade analysis engine for text-based communication. Identifies behavioral patterns, communication dynamics, and interaction health using peer-reviewed behavioral science
+A research-informed analysis engine for text-based communication. Identifies behavioral patterns, communication dynamics, and interaction health using peer-reviewed behavioral science
 
 > **Not a diagnostic tool.** Pattern detection is probabilistic. Always review flagged content in context. This is not a substitute for professional legal or clinical advice.
+>
+> **Privacy First:** This tool runs 100% locally. Your data never leaves your machine. See [DATA_PRIVACY.md](DATA_PRIVACY.md) for details.
 
 ---
 
@@ -101,23 +107,20 @@ For lower-severity categories (defensiveness, stonewalling, minimizing, etc.), m
 
 ```
 Communication Analysis Toolkit/
-├── engine/
-│   ├── __init__.py
-│   ├── analyzer.py        # Main analysis engine
-│   └── patterns.py        # Pattern detection library
-├── active/
-│   ├── signal_desktop_extractor.py
-│   ├── extract_signal_messages.py
-│   ├── generate_monthly_reports.py
-│   └── parse_manual_messages.py
-├── tools/                   # Diagnostic & extraction utilities
-├── cases/
-│   └── my_case/
-│       ├── config.json     # Case configuration
-│       ├── source_data/    # Your data files here
-│       └── output/         # Generated reports
+├── api/                     # FastAPI Backend & AI Agent
+│   ├── main.py
+│   ├── agent.py
+│   ├── retriever.py
+│   └── routers/
+├── engine/                  # Core Analysis Logic
+│   ├── analyzer.py
+│   └── patterns.py
+├── docs/                    # Documentation & ADRs
+│   └── adr/
+├── tools/                   # Diagnostic scripts
+├── cases/                   # User data
+├── tests/                   # Test suite
 ├── requirements.txt
-├── .gitignore
 └── README.md
 ```
 
@@ -128,12 +131,7 @@ Communication Analysis Toolkit/
     "case_name": "My Case",
     "user_label": "User A",
     "contact_label": "User B",
-    "contact_phone": "+1234567890",
-    "phone_suffix": "1234567890",
     "sms_xml": "./cases/my_case/source_data/sms_backup.xml",
-    "calls_xml": "./cases/my_case/source_data/calls_backup.xml",
-    "signal_desktop_json": "./cases/my_case/source_data/signal_messages.json",
-    "csv_messages": "./cases/my_case/source_data/messages.csv",
     "output_dir": "./cases/my_case/output",
     "date_start": "2025-01-01",
     "date_end": "2026-02-09"
@@ -142,9 +140,26 @@ Communication Analysis Toolkit/
 
 ### 3. Run the Analysis
 
+**Step A: Process Data**
 ```bash
 python -m engine.analyzer --config cases/my_case/config.json
 ```
+This generates `DATA.json`, `ANALYSIS.md`, and `TIMELINE.md`.
+
+**Step B: Start the AI Agent API**
+```bash
+uvicorn api.main:app --reload
+```
+The API will be available at `http://localhost:8000`.
+
+---
+
+## Architecture & Design
+
+We follow a modular architecture with strict separation of concerns.
+
+- **[ADR 001: Agentic RAG Architecture](docs/adr/001-agentic-rag-architecture.md)** — Details the 3-layer query routing system (Structured -> RAG -> Deep).
+- **[ADR 002: Error Handling & Observability](docs/adr/002-error-handling-observability.md)** — Details our resilience-first strategy and structured logging.
 
 ---
 
@@ -237,6 +252,42 @@ Each detected pattern includes:
 8. APA (2013). *DSM-5.* American Psychiatric Association.
 9. Domestic Abuse Intervention Programs (1981). *Duluth Model Power and Control Wheel.*
 10. Bateson, G. (1956). *Toward a Theory of Schizophrenia.* Behavioral Science.
+
+---
+
+## Development
+
+### Running Tests
+
+We use `pytest` for testing. The suite covers unit tests, integration tests, and "golden answer" regression tests.
+
+```bash
+# Run all tests
+pytest
+
+# Run only the Agent integration tests
+pytest tests/test_agent_questions.py
+```
+
+### Linting & Formatting
+
+We use `ruff` for fast linting and formatting, and `mypy` for static type checking.
+
+```bash
+# Linting
+ruff check .
+
+# Formatting
+ruff format .
+
+# Type Checking (Strict)
+mypy .
+```
+
+---
+
+### AI-Assisted Development
+This project uses AI-assisted development tools for code generation, testing, and documentation. All architecture decisions, code review, debugging, and testing verification are performed by the author.
 
 ---
 
