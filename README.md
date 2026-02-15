@@ -32,6 +32,18 @@ The **Communication Analysis Toolkit** is a research-informed forensic engine de
 *   **ANALYSIS.md**: Comprehensive statistics including message volume, response times, and pattern breakdowns.
 *   **EVIDENCE.md**: A catalog of every flagged message with its severity rating and clinical classification.
 *   **DATA.json**: A machine-readable dataset of the entire analysis.
+*   **AI_PROMPTS.md**: Ready-made prompts for external AI auditing (ChatGPT, Claude, Gemini)
+
+### Sample Output
+
+**TIMELINE.md** (excerpt):
+```
+2024-03-15 — Escalation Point
+18:42 - Contact: "That never happened" [🚩 DENY]
+18:44 - Contact: "You're imagining things" [🚩 GASLIGHTING]
+18:47 - User: "I have the texts right here"
+18:49 - Contact: "You're crazy" [🚩 GASLIGHTING - SEVERE]
+```
 
 ## Pattern Detection Categories
 
