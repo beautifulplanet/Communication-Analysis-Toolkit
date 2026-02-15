@@ -30,6 +30,13 @@ def find_data_json(case_id: str) -> Path | None:
     return None
 
 
+from cachetools import TTLCache, cached
+
+# Cache up to 100 cases for 5 minutes to reduce disk I/O under load
+_case_data_cache: TTLCache[str, dict[str, Any]] = TTLCache(maxsize=100, ttl=300)
+
+
+@cached(_case_data_cache)
 def load_case_data(case_id: str) -> dict[str, Any]:
     """Load and return parsed DATA.json for a case.
 

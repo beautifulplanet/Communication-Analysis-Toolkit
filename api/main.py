@@ -18,7 +18,7 @@ import json
 from collections import defaultdict
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.dependencies import CASES_DIR, find_data_json, load_case_data
@@ -75,14 +75,20 @@ app.include_router(chat_router, prefix="/api", tags=["Chat"])
 app.include_router(ingestion_router, prefix="/api", tags=["Ingestion"])
 app.include_router(messages_router, prefix="/api", tags=["Messages"])
 
+# Health router (provides CPU/RAM metrics)
+from api.routers.health import router as health_router
+app.include_router(health_router, prefix="/api", tags=["Health"])
+
 # Rate limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
 app.add_exception_handler(AgentError, agent_exception_handler)  # type: ignore[arg-type]
@@ -93,20 +99,9 @@ app.add_exception_handler(Exception, global_exception_handler)
 # Endpoints
 # ---------------------------------------------------------------------------
 
-
-# ---------------------------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------------------------
-
-
-@app.get("/api/health", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
-    """Health check endpoint."""
-    return HealthResponse()
-
-
 @app.get("/api/cases", response_model=CaseListResponse)
-async def list_cases() -> CaseListResponse:
+@limiter.limit("60/minute")
+async def list_cases(request: Request) -> CaseListResponse:
     """List all available cases."""
     cases: list[CaseInfo] = []
     if not CASES_DIR.is_dir():
@@ -138,7 +133,8 @@ async def list_cases() -> CaseListResponse:
 
 
 @app.get("/api/cases/{case_id}/summary", response_model=SummaryResponse)
-async def get_summary(case_id: str) -> SummaryResponse:
+@limiter.limit("20/minute")
+async def get_summary(case_id: str, request: Request) -> SummaryResponse:
     """Executive summary statistics for a case."""
     data = load_case_data(case_id)
     days_data: dict[str, Any] = data.get("days", {})
@@ -201,7 +197,8 @@ async def get_summary(case_id: str) -> SummaryResponse:
 
 
 @app.get("/api/cases/{case_id}/timeline", response_model=TimelineResponse)
-async def get_timeline(case_id: str) -> TimelineResponse:
+@limiter.limit("20/minute")
+async def get_timeline(case_id: str, request: Request) -> TimelineResponse:
     """Day-by-day timeline data."""
     data = load_case_data(case_id)
     days_data: dict[str, Any] = data.get("days", {})
@@ -235,7 +232,8 @@ async def get_timeline(case_id: str) -> TimelineResponse:
 
 
 @app.get("/api/cases/{case_id}/patterns", response_model=PatternsResponse)
-async def get_patterns(case_id: str) -> PatternsResponse:
+@limiter.limit("20/minute")
+async def get_patterns(case_id: str, request: Request) -> PatternsResponse:
     """Pattern breakdown for a case."""
     data = load_case_data(case_id)
     days_data: dict[str, Any] = data.get("days", {})
@@ -264,7 +262,8 @@ async def get_patterns(case_id: str) -> PatternsResponse:
 
 
 @app.get("/api/cases/{case_id}/hurtful", response_model=HurtfulResponse)
-async def get_hurtful(case_id: str) -> HurtfulResponse:
+@limiter.limit("20/minute")
+async def get_hurtful(case_id: str, request: Request) -> HurtfulResponse:
     """Hurtful language breakdown for a case."""
     data = load_case_data(case_id)
     days_data: dict[str, Any] = data.get("days", {})

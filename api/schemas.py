@@ -68,6 +68,8 @@ class GapItem(BaseModel):
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "3.1.0"
+    cpu: float = 0.0
+    memory: float = 0.0
 
 
 class CaseInfo(BaseModel):
