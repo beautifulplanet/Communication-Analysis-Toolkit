@@ -23,21 +23,12 @@ Usage:
 
 import argparse
 import json
-import logging
 import os
 import re
 import subprocess
 import sys
 import tempfile
 from datetime import datetime
-
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
 
 
 def _safe_ident(name: str) -> str:
@@ -83,7 +74,7 @@ def load_contact_config(args):
         )
 
     if not CONTACT_PHONE:
-        logger.error("Error: --phone or --config with contact_phone is required")
+        print("Error: --phone or --config with contact_phone is required")
         sys.exit(1)
 
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
@@ -94,19 +85,19 @@ def check_signal_desktop():
     print("Checking Signal Desktop installation...")
 
     if not os.path.exists(SIGNAL_DIR):
-        logger.error(f"Signal Desktop data folder not found: {SIGNAL_DIR}")
-        logger.info("→ Install Signal Desktop from https://signal.org/download")
-        logger.info("→ Link it to your phone and wait for messages to sync")
+        print(f"  ❌ Signal Desktop data folder not found: {SIGNAL_DIR}")
+        print("  → Install Signal Desktop from https://signal.org/download")
+        print("  → Link it to your phone and wait for messages to sync")
         return False
 
     if not os.path.exists(CONFIG_FILE):
-        logger.error(f"Config file not found: {CONFIG_FILE}")
-        logger.info("→ Signal Desktop may not be fully set up yet")
+        print(f"  ❌ Config file not found: {CONFIG_FILE}")
+        print("  → Signal Desktop may not be fully set up yet")
         return False
 
     if not os.path.exists(DB_FILE):
-        logger.error(f"Database not found: {DB_FILE}")
-        logger.info("→ Signal Desktop may still be syncing")
+        print(f"  ❌ Database not found: {DB_FILE}")
+        print("  → Signal Desktop may still be syncing")
         return False
 
     db_size = os.path.getsize(DB_FILE)
@@ -124,18 +115,17 @@ def get_encryption_key():
         if key:
             print(f"  ✅ Encryption key found ({len(key)} chars)")
             return key
-            return key
-        logger.error("No 'key' field in config.json")
+        print("  ❌ No 'key' field in config.json")
         return None
     except Exception as e:
-        logger.error(f"Error reading config: {e}")
+        print(f"  ❌ Error reading config: {e}")
         return None
 
 
 def try_sqlcipher(db_path, key):
     """Try to open the database using sqlcipher via pysqlcipher3."""
     try:
-        from pysqlcipher3 import dbapi2 as sqlcipher
+        from pysqlcipher3 import dbapi2 as sqlcipher # pyright: ignore[reportMissingImports]
         conn = sqlcipher.connect(db_path)
         c = conn.cursor()
         c.execute(f"PRAGMA key=\"x'{key}'\";")
@@ -193,7 +183,7 @@ def try_decrypt_to_plain_sqlite(db_path, key):
 
     # Method 1: Use pysqlcipher3 to export
     try:
-        from pysqlcipher3 import dbapi2 as sqlcipher
+        from pysqlcipher3 import dbapi2 as sqlcipher # type: ignore
         conn = sqlcipher.connect(db_path)
         c = conn.cursor()
         c.execute(f"PRAGMA key=\"x'{key}'\";")
@@ -411,10 +401,10 @@ def main():
         return
 
     # Step 2: Get encryption key
-    logger.info("Reading encryption key...")
+    print("\nReading encryption key...")
     key = get_encryption_key()
     if not key:
-        logger.error("Cannot read encryption key")
+        print("❌ Cannot read encryption key")
         return
 
     # Step 3: Open database
@@ -434,12 +424,12 @@ def main():
         conn = try_decrypt_to_plain_sqlite(DB_FILE, key)
 
     if not conn:
-        logger.error("Could not open the database.")
-        logger.info("We need sqlcipher support. Installing pysqlcipher3...")
-        logger.info("Run: pip install pysqlcipher3")
-        logger.info("If that fails, install sqlcipher CLI:")
-        logger.info("  Windows: choco install sqlcipher")
-        logger.info("  Or download from: https://github.com/nickoala/pysqlcipher3")
+        print("\n❌ Could not open the database.")
+        print("   We need sqlcipher support. Installing pysqlcipher3...")
+        print("   Run: pip install pysqlcipher3")
+        print("   If that fails, install sqlcipher CLI:")
+        print("     Windows: choco install sqlcipher")
+        print("     Or download from: https://github.com/nickoala/pysqlcipher3")
         return
 
     # Step 4: Extract messages
@@ -448,7 +438,7 @@ def main():
     conn.close()
 
     if not messages:
-        logger.warning("No messages extracted")
+        print("\n❌ No messages extracted")
         return
 
     # Stats

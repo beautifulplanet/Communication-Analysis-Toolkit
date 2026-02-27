@@ -9,7 +9,7 @@ from engine.types import MessageDict
 
 class CaseStorage:
     """
-    Data Access Object (DAO) for forensic case data.
+    Data Access Object (DAO) for case data.
     Abstracts SQL queries from the application logic.
     """
 
@@ -194,7 +194,7 @@ class CaseStorage:
     def get_daily_stats(self, case_id: int) -> list[dict[str, Any]]:
         """Get daily aggregation of messages and hurtful instances."""
         query = """
-            SELECT 
+            SELECT
                 m.date,
                 COUNT(*) as total_messages,
                 SUM(CASE WHEN m.direction = 'sent' THEN 1 ELSE 0 END) as sent,

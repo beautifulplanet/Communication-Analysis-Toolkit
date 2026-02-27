@@ -1,9 +1,9 @@
 import logging
 import sqlite3
 from collections.abc import Generator
-from typing import Optional
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +71,11 @@ def get_db_connection(db_path: Optional[Path] = None) -> Generator[sqlite3.Conne
     conn.row_factory = sqlite3.Row  # Access columns by name
 
     # Enforce foreign keys
+    # Enforce constraints and concurrency settings
     conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    conn.execute("PRAGMA busy_timeout=5000;") # Wait up to 5s if locked
 
     try:
         yield conn

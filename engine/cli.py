@@ -25,7 +25,7 @@ _CONSENT_TEXT = """
 ║     (Your own messages, or data you have legal access to.)         ║
 ║                                                                    ║
 ║  2. This tool does NOT produce legally admissible evidence.        ║
-║     Output is probabilistic pattern detection, not forensic proof. ║
+║     Output is probabilistic pattern detection, not definitive proof.║
 ║                                                                    ║
 ║  3. Consult an attorney before relying on any analysis in legal    ║
 ║     proceedings (custody, divorce, restraining orders, etc.).      ║
@@ -33,8 +33,8 @@ _CONSENT_TEXT = """
 ║  4. Pattern detection can produce false positives and false        ║
 ║     negatives. Always review flagged content in full context.      ║
 ║                                                                    ║
-║  5. This is NOT a diagnostic tool and does NOT replace clinical    ║
-║     or legal professional advice.                                  ║
+║  5. This is NOT a diagnostic tool and does NOT replace             ║
+║     professional or legal advice.                                  ║
 ║                                                                    ║
 ║  6. Supportive pattern scores analyze TEXT ONLY. Acts of service,  ║
 ║     quality time, physical affection, and non-verbal cues are NOT  ║

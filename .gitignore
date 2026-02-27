@@ -17,8 +17,11 @@ __pycache__/
 *.pyo
 *.egg-info/
 
-# Build tools (large C++ repos)
+# Build artifacts
+build/
 build_tools/
+dist/
+*.egg-info/
 
 # OS
 Thumbs.db
@@ -38,6 +41,18 @@ DATA.json
 SIGNAL_MESSAGES.md
 AI_PROMPTS.md
 
+# Uploaded files (test artifacts)
+uploads/
+
+# Load test results (generated)
+tests/load_results/
+
+# Test case artifacts with local paths
+cases/flow-test-case/
+
+# Utility scripts (not part of the project)
+check_syntax.py
+
 # Consent attestation (user-specific)
 .consent
 
@@ -45,3 +60,4 @@ AI_PROMPTS.md
 .env
 .env.local
 .env.*
+!.env.example

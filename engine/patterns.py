@@ -3,7 +3,7 @@
 Communication Analysis Toolkit — Pattern Detection Library
 ================================================================================
 
-Clinical-grade behavioral pattern detection for text-based communication
+Research-informed behavioral pattern detection for text-based communication
 analysis. Patterns are sourced from peer-reviewed psychology and communication
 research:
 

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communication Analyzer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .case-card {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        .status-badge {
+            font-size: 0.8em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #333;
+        }
+
+        .status-processed {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .status-pending {
+            background: #f57f17;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <nav>
+            <ul>
+                <li><strong>Communication Analyzer</strong></li>
+            </ul>
+            <ul>
+                <li><a href="#" role="button" onclick="document.getElementById('new-case-modal').open = true">New
+                        Analysis</a></li>
+                <li><a href="#" role="button" class="outline" onclick="loadCases()">Refresh</a></li>
+            </ul>
+        </nav>
+
+        <section id="login-section" style="display: none;">
+            <article>
+                <header>Authentication Required</header>
+                <p>Please log in to access analysis data.</p>
+                <button onclick="location.reload()">Log In</button>
+            </article>
+        </section>
+
+        <section id="dashboard">
+            <h2>Available Cases</h2>
+            <div id="case-list" class="grid">
+                <article aria-busy="true">Loading cases...</article>
+            </div>
+        </section>
+        <section>
+            <hr>
+            <p style="text-align: center; color: #666; font-size: 0.8em; margin-top: 2rem;">
+                <em>Disclaimer: This tool is for personal insight and self-reflection only. It is not intended for use
+                    in legal proceedings, custody disputes, or as evidence. No chain of custody is maintained.</em>
+            </p>
+        </section>
+    </main>
+
+    <!-- New Case Modal -->
+    <dialog id="new-case-modal">
+        <article>
+            <header>
+                <a href="#close" aria-label="Close" class="close"
+                    onclick="event.preventDefault(); document.getElementById('new-case-modal').open = false"></a>
+                New Analysis
+            </header>
+            <form id="new-case-form" onsubmit="event.preventDefault(); handleNewCase()">
+                <label for="case_name">Case Name</label>
+                <input type="text" id="case_name" name="case_name" placeholder="e.g. My Relationship" required>
+
+                <div class="grid">
+                    <label for="user_label">My Name
+                        <input type="text" id="user_label" name="user_label" placeholder="Me" required>
+                    </label>
+                    <label for="contact_label">Their Name
+                        <input type="text" id="contact_label" name="contact_label" placeholder="Them" required>
+                    </label>
+                </div>
+
+                <div class="grid">
+                    <button type="button" class="outline" id="tab-btn-upload" onclick="switchTab('upload')">Upload
+                        File</button>
+                    <button type="button" class="outline secondary" id="tab-btn-paste"
+                        onclick="switchTab('paste')">Paste Text</button>
+                </div>
+
+                <div id="tab-upload-content">
+                    <label for="file-upload">Source Data (XML/JSON)</label>
+                    <input type="file" id="file-upload" name="file" accept=".xml,.json,.zip">
+                    <small>Export from SMS Backup & Restore or use Signal Extractor.</small>
+                </div>
+
+                <div id="tab-paste-content" style="display:none;">
+                    <label for="paste-content">Paste Chat Log</label>
+                    <textarea id="paste-content" name="paste-content" rows="8"
+                        placeholder="Paste your text here..."></textarea>
+                </div>
+
+                <progress id="upload-progress" value="0" max="100" style="display:none"></progress>
+
+                <footer>
+                    <button type="submit" id="start-btn">Analyze</button>
+                </footer>
+            </form>
+        </article>
+    </dialog>
+
+    <script>
+        let currentTab = 'upload';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            if (tab === 'upload') {
+                document.getElementById('tab-upload-content').style.display = 'block';
+                document.getElementById('tab-paste-content').style.display = 'none';
+                document.getElementById('tab-btn-upload').classList.remove('secondary');
+                document.getElementById('tab-btn-paste').classList.add('secondary');
+            } else {
+                document.getElementById('tab-upload-content').style.display = 'none';
+                document.getElementById('tab-paste-content').style.display = 'block';
+                document.getElementById('tab-btn-upload').classList.add('secondary');
+                document.getElementById('tab-btn-paste').classList.remove('secondary');
+            }
+        }
+        async function deleteCase(caseId) {
+            if (!confirm(`Are you sure you want to permanently delete case ${caseId}? This cannot be undone.`)) return;
+            try {
+                const res = await fetch(`/api/cases/${caseId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to delete case.");
+                }
+            } catch (err) {
+                alert("Error deleting case: " + err.message);
+            }
+        }
+
+        async function handleNewCase() {
+            const fileInput = document.getElementById('file-upload');
+            const pasteInput = document.getElementById('paste-content');
+            const progress = document.getElementById('upload-progress');
+            const btn = document.getElementById('start-btn');
+
+            // Validate input based on tab
+            let isPaste = (currentTab === 'paste');
+
+            if (!isPaste && !fileInput.files.length) {
+                alert("Please select a file.");
+                return;
+            }
+            if (isPaste && !pasteInput.value.trim()) {
+                alert("Please paste some text.");
+                return;
+            }
+
+            btn.setAttribute('aria-busy', 'true');
+            btn.textContent = "Uploading...";
+            progress.style.display = 'block';
+
+            try {
+                let fileId, savedAs;
+
+                if (!isPaste) {
+                    // 1a. Upload File
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!uploadRes.ok) throw new Error("Upload failed: " + await uploadRes.text());
+                    const uploadData = await uploadRes.json();
+                    fileId = uploadData.file_id;
+                    savedAs = uploadData.saved_as;
+                } else {
+                    // 1b. Upload Text
+                    const uploadRes = await fetch('/api/upload/text', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content: pasteInput.value,
+                            filename: "pasted_log.txt"
+                        })
+                    });
+
+                    if (!uploadRes.ok) throw new Error("Text upload failed: " + await uploadRes.text());
+                    const uploadData = await uploadRes.json();
+                    fileId = uploadData.file_id;
+                    savedAs = uploadData.saved_as;
+                }
+
+                // 2. Create Case
+                btn.textContent = "Creating Case...";
+                progress.value = 50;
+
+                const caseName = document.getElementById('case_name').value;
+                const userLabel = document.getElementById('user_label').value;
+                const contactLabel = document.getElementById('contact_label').value;
+
+                const createRes = await fetch('/api/cases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        case_name: caseName,
+                        user_label: userLabel,
+                        contact_label: contactLabel,
+                        source_file_id: fileId,
+                        source_filename: savedAs
+                    })
+                });
+
+                if (!createRes.ok) throw new Error("Case creation failed: " + await createRes.text());
+                const caseData = await createRes.json();
+                const caseId = caseData.case_id;
+
+                // 3. Trigger Analysis
+                btn.textContent = "Starting Analysis...";
+                progress.value = 75;
+
+                const analyzeRes = await fetch(`/api/analyze/${caseId}`, { method: 'POST' });
+                if (!analyzeRes.ok) throw new Error("Analysis trigger failed");
+
+                progress.value = 100;
+                btn.textContent = "Done!";
+                setTimeout(() => window.location.reload(), 1000);
+
+            } catch (e) {
+                alert(e.message);
+                btn.setAttribute('aria-busy', 'false');
+                btn.textContent = "Analyze";
+                progress.style.display = 'none';
+            }
+        }
+
+        async function loadCases() {
+            const list = document.getElementById('case-list');
+            list.innerHTML = '<article aria-busy="true">Loading...</article>';
+
+            try {
+                const response = await fetch('/api/cases');
+
+                if (response.status === 401) {
+                    // Start browser auth flow by reloading or handling strictly
+                    window.location.reload();
+                    return;
+                }
+
+                if (!response.ok) throw new Error('Failed to load cases');
+
+                const data = await response.json();
+                renderCases(data.cases);
+            } catch (err) {
+                list.innerHTML = `<article class="headings"><h4 style="color:red">Error: ${err.message}</h4></article>`;
+            }
+        }
+
+        function renderCases(cases) {
+            const list = document.getElementById('case-list');
+            if (cases.length === 0) {
+                list.innerHTML = '<article>No cases found. Import data to begin.</article>';
+                return;
+            }
+
+            list.innerHTML = cases.map(c => `
+                <article>
+                    <header>
+                        <strong>${c.case_name || c.case_id}</strong>
+                        <span class="status-badge ${c.has_data ? 'status-processed' : 'status-pending'}">
+                            ${c.has_data ? 'Processed' : 'No Data'}
+                        </span>
+                    </header>
+                    <p>
+                        <small>ID: ${c.case_id}</small><br>
+                        ${c.user_label} &harr; ${c.contact_label}
+                    </p>
+                    <footer class="grid">
+                        <a href="/case.html?id=${c.case_id}" role="button" ${!c.has_data ? 'disabled' : ''}>
+                            Open Analysis
+                        </a>
+                        <button class="secondary outline" onclick="deleteCase('${c.case_id}')">Delete</button>
+                    </footer>
+                </article>
+            `).join('');
+        }
+
+        // Initial Load
+        loadCases();
+    </script>
+</body>
+
+</html>

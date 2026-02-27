@@ -17,7 +17,7 @@ class TestEmptyInputs:
 
     def test_detect_none_body(self):
         """None should be handled gracefully."""
-        assert detect_patterns(None, "received") == []
+        assert detect_patterns(None, "received") == [] # type: ignore
 
     def test_detect_whitespace_only(self):
         assert detect_patterns("   ", "received") == []
@@ -27,7 +27,7 @@ class TestEmptyInputs:
         assert is_h is False
 
     def test_hurtful_none(self):
-        is_h, _, _ = is_directed_hurtful(None, "received")
+        is_h, _, _ = is_directed_hurtful(None, "received") # type: ignore
         assert is_h is False
 
     def test_detect_newline_only(self):

@@ -24,6 +24,7 @@ from typing import Any
 import structlog
 from structlog.contextvars import bound_contextvars
 
+from engine.db import get_db_connection
 from engine.storage import CaseStorage
 
 log: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
@@ -254,7 +255,7 @@ class StructuredQueryEngine:
                 pats = json.loads(pj)
                 if target in pats:
                     count += 1
-            except:
+            except Exception:
                 pass
 
         return AgentAnswer(
@@ -278,17 +279,6 @@ class StructuredQueryEngine:
         )
 
     def _who_more_hurtful(self) -> AgentAnswer:
-        # Need direction breakdown of hurtful
-        # get_daily_stats aggregates hurtful total.
-        # I need a new query or just search messages with hurtful=1
-        msgs = self._storage.search_messages(self._case_id, limit=10000) # Only last 10000? Scalability limit?
-        # Actually search_messages is minimal.
-        # Better: use get_daily_stats but logic needs checking.
-        # get_daily_stats currently sums 'hurtful_count'. It doesn't split by direction.
-        # I'll rely on pattern stats which includes direction? No, pattern stats includes direction.
-        # Let's use search_messages with "is_hurtful=1" but no limit?
-        # That's too heavy.
-        # I'll fall back to a simpler answer or adding granular stats later.
         return AgentAnswer(answer="Detailed hurtful breakdown requires deeper analysis.", layer=1)
 
     def _worst_day(self) -> AgentAnswer:
@@ -362,7 +352,7 @@ class RAGEngine:
         # Build system instruction
         system = (
             f"You are analyzing communication between {self._user} and {self._contact}.\n"
-            "Each message has pre-computed labels from a clinical pattern detection engine:\n"
+            "Each message has pre-computed labels from a behavioral pattern detection engine:\n"
             "- patterns: detected behavioral patterns (DARVO, gaslighting, etc.)\n"
             "- supportive: positive communication (validation, empathy, appreciation)\n"
             "- severity: how hurtful the language is (severe/moderate/mild)\n"

@@ -183,6 +183,6 @@ class TestBenignHurtful:
         assert sev is None
 
     def test_benign_none(self):
-        is_h, _, sev = is_directed_hurtful(None, "received")
+        is_h, _, sev = is_directed_hurtful(None, "received") # type: ignore
         assert is_h is False
         assert sev is None

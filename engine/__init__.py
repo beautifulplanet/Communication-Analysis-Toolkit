@@ -1,5 +1,5 @@
 """Communication Analysis Toolkit — Engine Package"""
-from engine.analyzer import run_analysis
+from engine.analyzer import main as run_analysis
 from engine.patterns import (
     PATTERN_DESCRIPTIONS,
     PATTERN_LABELS,

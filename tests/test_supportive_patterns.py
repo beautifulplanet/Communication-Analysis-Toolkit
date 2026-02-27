@@ -657,7 +657,7 @@ class TestSupportiveBenign:
         assert hits == []
 
     def test_benign_none(self):
-        hits = detect_supportive_patterns(None, "sent")
+        hits = detect_supportive_patterns(None, "sent") # type: ignore
         assert hits == []
 
     def test_benign_short_ok(self):

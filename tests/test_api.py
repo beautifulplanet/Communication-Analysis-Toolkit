@@ -1,12 +1,12 @@
-
 import pytest
 from fastapi.testclient import TestClient
+from requests.auth import HTTPBasicAuth
 
 from api.main import app
 
+AUTH = HTTPBasicAuth("admin", "changeme")
 client = TestClient(app)
 
-# Use the sample case for testing
 CASE_ID = "sample"
 
 def test_health_check():
@@ -18,17 +18,16 @@ def test_health_check():
     assert len(response.headers["X-Request-ID"]) > 0
 
 def test_list_cases():
-    response = client.get("/api/cases")
+    response = client.get("/api/cases", auth=AUTH)
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data["cases"], list)
-    # Check if sample case is present
     found = any(c["case_id"] == CASE_ID for c in data["cases"])
     if not found:
         pytest.skip("Sample case not found, skipping specific case tests")
 
 def test_get_summary():
-    response = client.get(f"/api/cases/{CASE_ID}/summary")
+    response = client.get(f"/api/cases/{CASE_ID}/summary", auth=AUTH)
     if response.status_code == 404:
         pytest.skip("Sample case data not found")
     assert response.status_code == 200
@@ -39,7 +38,8 @@ def test_get_summary():
 def test_ask_question():
     response = client.post(
         f"/api/cases/{CASE_ID}/ask",
-        json={"question": "How many messages?"}
+        json={"question": "How many messages?"},
+        auth=AUTH,
     )
     if response.status_code == 404:
         pytest.skip("Sample case data not found")
@@ -47,13 +47,13 @@ def test_ask_question():
     data = response.json()
     assert "answer" in data
     assert "confidence" in data
-    # Answer should contain a number
     assert any(char.isdigit() for char in data["answer"])
 
 def test_ask_question_missing_case():
     response = client.post(
         "/api/cases/nonexistent_case_id/ask",
-        json={"question": "Hello?"}
+        json={"question": "Hello?"},
+        auth=AUTH,
     )
     assert response.status_code == 404
     data = response.json()
@@ -62,5 +62,4 @@ def test_ask_question_missing_case():
     assert "Case 'nonexistent_case_id' not found" in data["error"]["message"]
     assert "request_id" in data["error"]
     assert len(data["error"]["request_id"]) > 0
-    # Header should match body
     assert response.headers["X-Request-ID"] == data["error"]["request_id"]

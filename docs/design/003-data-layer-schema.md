@@ -15,7 +15,7 @@ We will migrate to **SQLite** as the storage engine. This allows for:
 ## Schema Design
 
 ### 1. `cases` Table
-Stores metadata about the forensic case.
+Stores metadata about the analysis case.
 
 | Column | Type | Description |
 |---|---|---|

@@ -6,7 +6,7 @@ We welcome contributions from researchers, developers, and data scientists.
 ## 🤝 Code of Conduct
 
 This project is intended for **ethical research purposes**.
-*   **Do not** add features that enable non-consensual surveillance ("stalkerware").
+*   This tool is designed for self-analysis of your own communication data. **Do not** add features that enable non-consensual monitoring of others.
 *   **Do not** weaken the privacy guarantees (local-only processing).
 
 ## 🛠️ Development Setup

@@ -1,23 +1,46 @@
+"""
+Observability smoke tests — verify structured logging and layer routing.
 
-import logging
+Requires a SQLite database with test data. Skips if unavailable.
+"""
 
-from api.agent import AnalysisAgent
+import pytest
 
-# Configure logging to console
-logging.basicConfig(level=logging.INFO)
+from engine.db import init_db
+from engine.storage import CaseStorage
 
-print("Starting observability test...")
-data = {"days": {}, "user": "A", "contact": "B", "period": {"start": "2025-01-01", "end": "2025-01-01"}}
-agent = AnalysisAgent(data)
 
-print("\n--- Test 1: L2 Fallback (Keyword Search) ---")
-ans = agent.ask("hello")
-# Should log: agent_answer_complete layer=2 duration_ms=... l1_time_ms=...
+@pytest.fixture
+def storage(tmp_path):
+    db_path = tmp_path / "obs_test.db"
+    init_db(db_path)
+    return CaseStorage(db_path)
 
-print("\n--- Test 2: L1 Exact Match ---")
-# Need to mock L1 data?
-# StructuredQueryEngine checks keywords. "how many messages"
-ans = agent.ask("how many messages")
-# Should log: agent_answer_complete layer=1 duration_ms=...
 
-print("\nCheck logs above for duration_ms key.")
+@pytest.fixture
+def case_id(storage):
+    return storage.create_case(
+        name="Observability Test",
+        user_name="A",
+        contact_name="B",
+    )
+
+
+def test_agent_layer2_fallback(storage, case_id):
+    """Layer 2 fallback: agent handles unknown questions without crashing."""
+    from api.agent import AnalysisAgent
+
+    agent = AnalysisAgent(storage, case_id, user_name="A", contact_name="B")
+    ans = agent.ask("hello")
+    assert ans.answer
+    assert ans.layer == 2
+
+
+def test_agent_layer1_structured(storage, case_id):
+    """Layer 1: structured stat queries return numeric data."""
+    from api.agent import AnalysisAgent
+
+    agent = AnalysisAgent(storage, case_id, user_name="A", contact_name="B")
+    ans = agent.ask("how many messages")
+    assert ans.answer
+    assert ans.layer == 1

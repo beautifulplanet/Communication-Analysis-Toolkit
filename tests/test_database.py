@@ -1,7 +1,9 @@
-import pytest
 import sqlite3
 from pathlib import Path
-from engine.db import init_db, get_db_connection
+
+import pytest
+
+from engine.db import get_db_connection, init_db
 from engine.storage import CaseStorage
 
 # Use a temporary file for testing
@@ -30,7 +32,7 @@ def test_create_case(db_path):
     store = CaseStorage(db_path)
     case_id = store.create_case("Test Case", "Alice", "Bob")
     assert case_id == 1
-    
+
     case = store.get_case(case_id)
     assert case["name"] == "Test Case"
     assert case["user_name"] == "Alice"
@@ -40,7 +42,7 @@ def test_add_message(db_path):
     """Test adding raw messages."""
     store = CaseStorage(db_path)
     case_id = store.create_case("Msg Case", "A", "B")
-    
+
     msg_data = {
         "timestamp": 1700000000,
         "date": "2024-01-01",
@@ -50,10 +52,10 @@ def test_add_message(db_path):
         "body": "Hello World",
         "media_type": "text"
     }
-    
+
     msg_id = store.add_message(case_id, msg_data)
     assert msg_id == 1
-    
+
     # Verify retrieval
     msgs = store.get_messages(case_id)
     assert len(msgs) == 1
@@ -65,16 +67,16 @@ def test_add_analysis(db_path):
     store = CaseStorage(db_path)
     case_id = store.create_case("Analysis Case", "A", "B")
     msg_id = store.add_message(case_id, {"body": "test"})
-    
+
     analysis = {
         "is_hurtful": True,
         "severity": "mild",
         "patterns": ["gaslighting"],
         "keywords": ["crazy"]
     }
-    
+
     store.add_analysis(msg_id, analysis)
-    
+
     # Verify directly in DB
     with get_db_connection(db_path) as conn:
         row = conn.execute("SELECT * FROM message_analysis WHERE message_id = ?", (msg_id,)).fetchone()

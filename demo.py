@@ -8,9 +8,9 @@ import streamlit as st
 
 from engine.analyzer import run_analysis
 
-st.set_page_config(page_title="Communication Forensic Tool", page_icon="🕵️‍♀️", layout="wide")
+st.set_page_config(page_title="Communication Analysis Toolkit", page_icon="🕵️‍♀️", layout="wide")
 
-st.title("🕵️‍♀️ Communication Forensic Tool")
+st.title("🕵️‍♀️ Communication Analysis Toolkit")
 st.markdown("""
 **Research-informed pattern detection for text analysis.**
 *100% Local Privacy. No data leaves your machine.*

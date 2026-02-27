@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Analysis</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        .stat-val {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <nav>
+            <ul>
+                <li><strong>Case Analysis</strong></li>
+            </ul>
+            <ul>
+                <li><a href="/" role="button" class="outline">Back to Dashboard</a></li>
+            </ul>
+        </nav>
+
+        <hgroup>
+            <h2 id="case-title">Loading...</h2>
+            <h3 id="case-subtitle"></h3>
+        </hgroup>
+
+        <!-- Key Metrics -->
+        <div class="grid">
+            <div class="stat-card">
+                <span class="stat-val" id="metric-days">-</span>
+                Total Days
+            </div>
+            <div class="stat-card">
+                <span class="stat-val" id="metric-msgs">-</span>
+                Messages
+            </div>
+            <div class="stat-card">
+                <span class="stat-val" id="metric-talk">-</span>
+                Talk Time (min)
+            </div>
+            <div class="stat-card">
+                <span class="stat-val" id="metric-hurtful">-</span>
+                Hurtful Msg
+            </div>
+        </div>
+
+        <hr>
+
+        <section>
+            <h3>Volume Timeline</h3>
+            <div class="chart-container">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </section>
+
+        <section>
+            <h3>Communication Patterns</h3>
+            <div class="grid" id="patterns-grid">
+                <!-- dynamic content -->
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const caseId = urlParams.get('id');
+
+        if (!caseId) {
+            alert('No case ID provided');
+            window.location.href = '/';
+        }
+
+        async function loadData() {
+            try {
+                // Fetch Summary
+                const sumRes = await fetch(`/api/cases/${caseId}/summary`);
+                if (sumRes.status === 401) return window.location.reload();
+                const summary = await sumRes.json();
+                renderSummary(summary);
+
+                // Fetch Timeline for Chart
+                const timeRes = await fetch(`/api/cases/${caseId}/timeline`);
+                const timeline = await timeRes.json();
+                renderChart(timeline);
+
+            } catch (err) {
+                console.error(err);
+                alert('Failed to load case data');
+            }
+        }
+
+        function renderSummary(data) {
+            document.getElementById('case-title').innerText = `Case: ${data.case_name || caseId}`;
+            document.getElementById('case-subtitle').innerText = `${data.user_label} vs ${data.contact_label} (${data.period.start} - ${data.period.end})`;
+
+            document.getElementById('metric-days').innerText = data.total_days;
+            document.getElementById('metric-msgs').innerText = (data.total_messages_sent + data.total_messages_received).toLocaleString();
+            document.getElementById('metric-talk').innerText = Math.round(data.total_talk_seconds / 60).toLocaleString();
+            document.getElementById('metric-hurtful').innerText = data.hurtful_from_user + data.hurtful_from_contact;
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('timelineChart');
+            const dates = data.days.map(d => d.date);
+            const sent = data.days.map(d => d.messages.sent);
+            const rcvd = data.days.map(d => d.messages.received);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { label: 'Sent', data: sent, backgroundColor: '#4caf50' },
+                        { label: 'Received', data: rcvd, backgroundColor: '#2196f3' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true }
+                    }
+                }
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+
+</html>

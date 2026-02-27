@@ -1,3 +1,4 @@
+"""Test agent caching in api.services — verifies cache hits and mtime-based invalidation."""
 
 from unittest.mock import MagicMock, patch
 
@@ -5,8 +6,6 @@ import pytest
 
 from api.services import _AGENT_CACHE, get_case_agent
 
-# Mock data content
-MOCK_DATA = {"case": "Test", "days": {}}
 
 @pytest.fixture(autouse=True)
 def clear_cache():
@@ -14,26 +13,29 @@ def clear_cache():
     yield
     _AGENT_CACHE.clear()
 
-@patch("api.services.find_data_json")
-@patch("api.services.load_case_data")
-def test_agent_caching(mock_load, mock_find):
-    # Setup mock
-    mock_path = MagicMock()
-    mock_path.stat.return_value.st_mtime = 1000.0
-    mock_find.return_value = mock_path
-    mock_load.return_value = MOCK_DATA
 
-    # 1. First call - should load
+@patch("api.services.CaseStorage")
+@patch("api.services.get_db_path")
+def test_agent_caching(mock_get_db_path, mock_storage_cls):
+    mock_db_path = MagicMock()
+    mock_db_path.exists.return_value = True
+    mock_db_path.stat.return_value.st_mtime = 1000.0
+    mock_get_db_path.return_value = mock_db_path
+
+    mock_store = MagicMock()
+    mock_store.get_case_by_name.return_value = {
+        "id": 1, "user_name": "A", "contact_name": "B",
+    }
+    mock_storage_cls.return_value = mock_store
+
     agent1 = get_case_agent("test_case")
-    assert mock_load.call_count == 1
+    assert mock_storage_cls.call_count == 1
 
-    # 2. Second call - should be cached (same object)
     agent2 = get_case_agent("test_case")
-    assert mock_load.call_count == 1
+    assert mock_storage_cls.call_count == 1
     assert agent1 is agent2
 
-    # 3. Change mtime - should reload
-    mock_path.stat.return_value.st_mtime = 2000.0
+    mock_db_path.stat.return_value.st_mtime = 2000.0
     agent3 = get_case_agent("test_case")
-    assert mock_load.call_count == 2
+    assert mock_storage_cls.call_count == 2
     assert agent3 is not agent1

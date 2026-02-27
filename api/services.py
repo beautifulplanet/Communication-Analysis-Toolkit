@@ -6,8 +6,6 @@ import structlog
 from fastapi import HTTPException
 
 from api.agent import AnalysisAgent
-from api.dependencies import find_data_json, load_case_data
-
 from engine.db import get_db_path
 from engine.storage import CaseStorage
 
@@ -41,21 +39,21 @@ def get_case_agent(case_id: str) -> AnalysisAgent:
     # Load fresh from DB
     log.info("loading_agent_from_db", case_id=case_id)
     store = CaseStorage(db_path)
-    
+
     # Try finding by name (legacy folder name) or UUID
     case_meta = store.get_case_by_name(case_id)
     if not case_meta:
         case_meta = store.get_case_by_uuid(case_id)
-    
+
     if not case_meta:
         # If not in DB, it might be an old case that needs re-analysis
         raise HTTPException(
-            status_code=404, 
+            status_code=404,
             detail=f"Case '{case_id}' not found in database. Please re-run analysis."
         )
 
     agent = AnalysisAgent(
-        storage=store, 
+        storage=store,
         case_id=case_meta["id"],
         user_name=case_meta.get("user_name", "User"),
         contact_name=case_meta.get("contact_name", "Contact")

@@ -33,7 +33,7 @@ class TestEscapeMd:
         assert escape_md("") == ""
 
     def test_escape_none(self):
-        assert escape_md(None) is None
+        assert escape_md(None) is None # type: ignore
 
     def test_escape_plain_text(self):
         assert escape_md("hello world") == "hello world"

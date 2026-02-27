@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import Any
 
 from engine.config import escape_md
+from engine.crypto import encrypt_data
 from engine.logger import logger
 from engine.patterns import (
     PATTERN_DESCRIPTIONS,
@@ -146,7 +147,7 @@ def generate_analysis_report(
 
     lines.append("## Behavioral Pattern Summary\n")
     lines.append(
-        "*Patterns detected using clinical taxonomy (DARVO, Gottman, Coercive Control, etc.)*\n"
+        "*Patterns detected using behavioral science taxonomy (DARVO, Gottman, Coercive Control, etc.)*\n"
     )
     all_patterns = sorted(
         set(list(patterns_user.keys()) + list(patterns_contact.keys())),
@@ -189,7 +190,7 @@ def generate_evidence_report(config: dict[str, Any], days: dict[str, DayData]) -
     lines.append("# Verified Behavioral Pattern Evidence\n")
     lines.append(f"**Case**: {escape_md(config['case_name'])}")
     lines.append(f"**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    lines.append("**Method**: Context-aware clinical pattern matching\n")
+    lines.append("**Method**: Context-aware behavioral pattern detection\n")
     lines.append("---\n")
 
     lines.append(f"## Hurtful Language FROM {contact}\n")
@@ -460,7 +461,7 @@ Note any false positives or weak evidence that should be excluded.
 ## 3. Data Integrity Auditor
 
 ```
-You are a forensic data analyst. Review this communication analysis for:
+You are a data integrity analyst. Review this communication analysis for:
 
 1. Data completeness — what's missing?
 2. Methodology soundness — are the detection methods reliable?
@@ -476,7 +477,7 @@ You are a forensic data analyst. Review this communication analysis for:
 ## 4. Pattern-Specific Deep Dive
 
 ```
-You are a clinical psychologist specializing in abusive relationship dynamics.
+You are a behavioral analysis assistant specializing in communication pattern recognition.
 Focus specifically on these pattern categories detected in the data:
 
 1. DARVO instances — are they genuine manipulation or normal conversation?
@@ -523,6 +524,15 @@ def save_data_json(config: dict[str, Any], days: dict[str, DayData], gaps: list[
     }
 
     output_path = os.path.join(config["output_dir"], "DATA.json")
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data_output, f, indent=2, ensure_ascii=False, default=str)
+
+    # Serialize to JSON bytes
+    json_str = json.dumps(data_output, indent=2, ensure_ascii=False, default=str)
+    json_bytes = json_str.encode("utf-8")
+
+    # Encrypt (if key configured)
+    final_bytes = encrypt_data(json_bytes)
+
+    # Write binary
+    with open(output_path, "wb") as f:
+        f.write(final_bytes)
     logger.info("report_saved", file="DATA.json")

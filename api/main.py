@@ -14,31 +14,40 @@ All endpoints are read-only. Data stays local.
 
 from __future__ import annotations
 
-import json
+import os
+import shutil
+import stat
 from collections import defaultdict
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+import structlog
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
-from api.dependencies import CASES_DIR, find_data_json, load_case_data
+from api.dependencies import get_case_list_async, get_case_path, load_case_data
 from api.errors import (
     agent_exception_handler,
     global_exception_handler,
     http_exception_handler,
 )
 from api.exceptions import AgentError
-from api.middleware import RequestIdMiddleware
+from api.middleware import BasicAuthMiddleware, RequestIdMiddleware
+from api.routers.cases import router as cases_router
 from api.routers.chat import router as chat_router
+from api.routers.health import router as health_router
 from api.routers.ingestion import router as ingestion_router
 from api.routers.messages import router as messages_router
+from api.routers.upload import router as upload_router
 from api.schemas import (
     CallStats,
-    CaseInfo,
     CaseListResponse,
     DaySummary,
     GapItem,
-    HealthResponse,
     HurtfulItem,
     HurtfulResponse,
     MessageStats,
@@ -49,10 +58,16 @@ from api.schemas import (
     TimelineResponse,
 )
 
-# ---------------------------------------------------------------------------
-# App setup
-# ---------------------------------------------------------------------------
+logger = structlog.get_logger(__name__)
 
+
+def _remove_readonly(func, path, exc_info):
+    """Callback for shutil.rmtree to handle read-only files (Windows)."""
+    if func in (os.rmdir, os.remove, os.unlink) and exc_info[1].errno == 13:
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+    else:
+        raise
 
 
 app = FastAPI(
@@ -70,24 +85,18 @@ app.add_middleware(
 )
 
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(BasicAuthMiddleware)
 
 app.include_router(chat_router, prefix="/api", tags=["Chat"])
 app.include_router(ingestion_router, prefix="/api", tags=["Ingestion"])
 app.include_router(messages_router, prefix="/api", tags=["Messages"])
-
-# Health router (provides CPU/RAM metrics)
-from api.routers.health import router as health_router
+app.include_router(cases_router, prefix="/api", tags=["Cases"])
+app.include_router(upload_router, prefix="/api", tags=["Ingestion"])
 app.include_router(health_router, prefix="/api", tags=["Health"])
-
-# Rate limiting
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 app.add_middleware(SlowAPIMiddleware)
 
 app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
@@ -102,33 +111,8 @@ app.add_exception_handler(Exception, global_exception_handler)
 @app.get("/api/cases", response_model=CaseListResponse)
 @limiter.limit("60/minute")
 async def list_cases(request: Request) -> CaseListResponse:
-    """List all available cases."""
-    cases: list[CaseInfo] = []
-    if not CASES_DIR.is_dir():
-        return CaseListResponse(cases=[])
-
-    for entry in sorted(CASES_DIR.iterdir()):
-        if not entry.is_dir():
-            continue
-        case_id = entry.name
-        data_path = find_data_json(case_id)
-        info = CaseInfo(case_id=case_id, has_data=data_path is not None)
-
-        if data_path is not None:
-            try:
-                with open(data_path, encoding="utf-8") as f:
-                    data = json.load(f)
-                info.case_name = data.get("case", "")
-                info.user_label = data.get("user", "")
-                info.contact_label = data.get("contact", "")
-                info.period_start = data.get("period", {}).get("start", "")
-                info.period_end = data.get("period", {}).get("end", "")
-                info.generated = data.get("generated", "")
-                info.total_days = len(data.get("days", {}))
-            except (json.JSONDecodeError, OSError):
-                pass
-
-        cases.append(info)
+    """List all available cases (async scan)."""
+    cases = await get_case_list_async()
     return CaseListResponse(cases=cases)
 
 
@@ -278,6 +262,28 @@ async def get_hurtful(case_id: str, request: Request) -> HurtfulResponse:
             from_contact.append(HurtfulItem(**h))
 
     return HurtfulResponse(from_user=from_user, from_contact=from_contact)
+
+
+@app.delete("/api/cases/{case_id}", status_code=204)
+@limiter.limit("5/minute")
+async def delete_case(case_id: str, request: Request):
+    """Delete a case directory."""
+    case_path = get_case_path(case_id)
+    if not case_path:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    try:
+        shutil.rmtree(case_path, onerror=_remove_readonly)
+    except OSError as e:
+        logger.error(f"Failed to delete case {case_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete case") from e
+
+    return Response(status_code=204)
+
+
+# Mount static files (Dashboard)
+# This must be last to allow API routes to take precedence
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 
 

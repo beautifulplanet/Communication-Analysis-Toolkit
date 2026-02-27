@@ -1,4 +1,4 @@
-# Forensic Cases Directory
+# Analysis Cases Directory
 
 **⚠️ PRIVACY WARNING ⚠️**
 

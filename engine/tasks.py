@@ -11,7 +11,7 @@ from engine.logger import logger
 REDIS_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 
 celery_app = Celery(
-    "comms_forensics",
+    "comms_analysis",
     broker=REDIS_URL,
     backend=REDIS_URL
 )

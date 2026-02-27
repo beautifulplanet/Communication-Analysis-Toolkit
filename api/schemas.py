@@ -70,6 +70,12 @@ class HealthResponse(BaseModel):
     version: str = "3.1.0"
     cpu: float = 0.0
     memory: float = 0.0
+    memory_mb: float = 0.0
+    disk_read_mb: float = 0.0
+    disk_write_mb: float = 0.0
+    open_files: int = 0
+    cache_size: int = 0
+    cache_maxsize: int = 0
 
 
 class CaseInfo(BaseModel):

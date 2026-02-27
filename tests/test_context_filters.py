@@ -44,7 +44,7 @@ class TestIsApology:
         assert is_apology("") is False
 
     def test_not_apology_none(self):
-        assert is_apology(None) is False
+        assert is_apology(None) is False # type: ignore
 
 
 # ==============================================================================

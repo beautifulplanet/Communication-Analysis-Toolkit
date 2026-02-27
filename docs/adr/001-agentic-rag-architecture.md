@@ -19,7 +19,7 @@ We implemented a **multi-layered "Agentic RAG" architecture** that routes querie
 2.  **Layer 2: RAG (Retrieval-Augmented Generation)**
     *   **Purpose:** Handles questions requiring context, examples, or synthesis of text.
     *   **Mechanism:**
-        1.  **Retriever:** Filters messages by date, participant, and pre-computed clinical labels (e.g., `patterns=['gaslighting']`).
+        1.  **Retriever:** Filters messages by date, participant, and pre-computed behavioral labels (e.g., `patterns=['gaslighting']`).
         2.  **Context Construction:** Formats the filtered messages into a condensed prompt.
         3.  **LLM Call:** Sends the prompt to a lightweight model (e.g., Gemini Flash, GPT-4o-mini).
     *   **Pros:** Context-aware, capable of nuance, grounded in actual data.

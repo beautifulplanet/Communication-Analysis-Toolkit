@@ -22,6 +22,7 @@ Run:
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -32,9 +33,11 @@ import pytest
 # ---------------------------------------------------------------------------
 from api.agent import AgentAnswer, AnalysisAgent
 from api.retriever import MessageRetriever
+from engine.db import init_db
+from engine.storage import CaseStorage
 
 # ---------------------------------------------------------------------------
-# Fixture: load sample DATA.json
+# Fixture: load sample DATA.json and build a test SQLite database
 # ---------------------------------------------------------------------------
 
 
@@ -50,8 +53,44 @@ def sample_data() -> dict[str, Any]:
 
 @pytest.fixture(scope="module")
 def agent(sample_data: dict[str, Any]) -> AnalysisAgent:
-    """Create an agent from sample data."""
-    return AnalysisAgent(sample_data)
+    """Create an agent backed by a temp SQLite DB loaded from sample data."""
+    tmp_dir = tempfile.mkdtemp()
+    db_path = Path(tmp_dir) / "test_agent.db"
+    init_db(db_path)
+    storage = CaseStorage(db_path)
+
+    case_id = storage.create_case(
+        name=sample_data.get("case", "Test Case"),
+        user_name=sample_data.get("user", "User"),
+        contact_name=sample_data.get("contact", "Contact"),
+    )
+
+    for date_str, day in sample_data.get("days", {}).items():
+        for msg in day.get("messages", []):
+            msg_id = storage.add_message(case_id, {
+                "timestamp": msg.get("timestamp", 0),
+                "date": date_str,
+                "time": msg.get("time", ""),
+                "source": "test",
+                "direction": msg.get("direction", "unknown"),
+                "body": msg.get("body", ""),
+            })
+            labels = msg.get("labels", {})
+            if labels:
+                storage.add_analysis(msg_id, {
+                    "is_hurtful": labels.get("severity") is not None,
+                    "severity": labels.get("severity"),
+                    "is_apology": labels.get("is_apology", False),
+                    "patterns": labels.get("patterns", []),
+                    "keywords": labels.get("keywords", []),
+                    "supportive": labels.get("supportive", []),
+                })
+
+    return AnalysisAgent(
+        storage, case_id,
+        user_name=sample_data.get("user", "User"),
+        contact_name=sample_data.get("contact", "Contact"),
+    )
 
 
 @pytest.fixture(scope="module")
@@ -1028,65 +1067,31 @@ class TestAgentIntegration:
 class TestAgentWithEmptyData:
     """Test agent with empty or minimal dataset."""
 
-    def test_empty_days(self) -> None:
-        data: dict[str, Any] = {
-            "case": "Empty Case", "user": "A", "contact": "B",
-            "period": {"start": "2025-01-01", "end": "2025-01-01"},
-            "days": {}, "gaps": [],
-        }
-        agent = AnalysisAgent(data)
+    @staticmethod
+    def _make_agent(tmp_path: Path, name: str = "Test") -> AnalysisAgent:
+        """Create a minimal agent backed by an empty SQLite DB."""
+        db_path = tmp_path / f"{name}.db"
+        init_db(db_path)
+        storage = CaseStorage(db_path)
+        case_id = storage.create_case(name=name, user_name="A", contact_name="B")
+        return AnalysisAgent(storage, case_id, user_name="A", contact_name="B")
+
+    def test_empty_days(self, tmp_path: Path) -> None:
+        agent = self._make_agent(tmp_path, "Empty")
         ans = agent.ask("How many messages total?")
         assert "0" in ans.answer
 
-    def test_no_hurtful_messages(self) -> None:
-        data: dict[str, Any] = {
-            "case": "Peaceful", "user": "A", "contact": "B",
-            "period": {"start": "2025-01-01", "end": "2025-01-01"},
-            "days": {
-                "2025-01-01": {
-                    "had_contact": True, "messages_sent": 5, "messages_received": 5,
-                    "calls_in": 0, "calls_out": 0, "calls_missed": 0, "talk_seconds": 0,
-                    "hurtful_from_user": [], "hurtful_from_contact": [],
-                    "patterns_from_user": [], "patterns_from_contact": [],
-                    "messages": [],
-                }
-            },
-            "gaps": [],
-        }
-        agent = AnalysisAgent(data)
+    def test_no_hurtful_messages(self, tmp_path: Path) -> None:
+        agent = self._make_agent(tmp_path, "Peaceful")
         ans = agent.ask("Who was worse?")
         assert "equal" in ans.answer.lower() or "0" in ans.answer
 
-    def test_no_patterns(self) -> None:
-        data: dict[str, Any] = {
-            "case": "No Patterns", "user": "A", "contact": "B",
-            "period": {"start": "2025-01-01", "end": "2025-01-01"},
-            "days": {
-                "2025-01-01": {
-                    "had_contact": True, "messages_sent": 5, "messages_received": 5,
-                    "calls_in": 0, "calls_out": 0, "calls_missed": 0, "talk_seconds": 0,
-                    "hurtful_from_user": [], "hurtful_from_contact": [],
-                    "patterns_from_user": [], "patterns_from_contact": [],
-                    "messages": [],
-                }
-            },
-            "gaps": [],
-        }
-        agent = AnalysisAgent(data)
+    def test_no_patterns(self, tmp_path: Path) -> None:
+        agent = self._make_agent(tmp_path, "NoPatterns")
         ans = agent.ask("What patterns were detected?")
         assert "no" in ans.answer.lower()
 
-    def test_no_gaps(self) -> None:
-        data: dict[str, Any] = {
-            "case": "No Gaps", "user": "A", "contact": "B",
-            "period": {"start": "2025-01-01", "end": "2025-01-01"},
-            "days": {"2025-01-01": {"had_contact": True, "messages_sent": 5, "messages_received": 5,
-                    "calls_in": 0, "calls_out": 0, "calls_missed": 0, "talk_seconds": 0,
-                    "hurtful_from_user": [], "hurtful_from_contact": [],
-                    "patterns_from_user": [], "patterns_from_contact": [],
-                    "messages": []}},
-            "gaps": [],
-        }
-        agent = AnalysisAgent(data)
+    def test_no_gaps(self, tmp_path: Path) -> None:
+        agent = self._make_agent(tmp_path, "NoGaps")
         ans = agent.ask("Were there any communication gaps?")
         assert "no" in ans.answer.lower()

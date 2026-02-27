@@ -3,7 +3,7 @@
 **Project**: Communication Analysis Toolkit  
 **Started**: 2026-02-10  
 **Completed**: 2026-02-10  
-**Scope**: `9/Communication forensic tool/` — NO changes outside this folder  
+**Scope**: `9/Communication Analysis Toolkit/` — NO changes outside this folder  
 **Status**: ALL PHASES COMPLETE
 
 ---
@@ -93,8 +93,8 @@
 - [ ] `signal_decrypt_v3.py:~L195` — remove/mask cipher_key.hex() print  
 
 ### 4.2 Fix old project name references
-- [ ] `engine/analyzer.py:~L467` — "Communication Forensic Analysis" → "Communication Analysis"
-- [ ] `engine/analyzer.py:main()` — "COMMUNICATION FORENSIC TOOL" → "COMMUNICATION ANALYSIS TOOLKIT"
+- [ ] `engine/analyzer.py:~L467` — "Communication Analysis" banner text
+- [ ] `engine/analyzer.py:main()` — "COMMUNICATION ANALYSIS TOOLKIT" banner text
 
 ### 4.3 XML & escape in old_unused (archived but should be clean)
 - [ ] Add defusedxml + escape_md() patterns to old_unused files

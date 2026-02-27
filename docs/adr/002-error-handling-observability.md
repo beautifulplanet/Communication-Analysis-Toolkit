@@ -13,7 +13,7 @@ We adopted a **"Resilience-First"** error handling strategy combined with **stru
     *   **Layer 2 (RAG):** If the retrieval fails or the LLM is unreachable, the agent returns a valid `AgentAnswer` object with `answer="I encountered an error..."` rather than raising an HTTP 500. This keeps the frontend operational.
 
 2.  **Custom Exception Hierarchy:**
-    *   Base class: `CommunicationForensicError`
+    *   Base class: `CommunicationAnalysisError`
     *   Specifics: `DataLoadingError`, `AnalysisError`, `AgentRetrievalError`.
     *   **Outcome:** Allows precise catch blocks and meaningful error messages to the user.
 

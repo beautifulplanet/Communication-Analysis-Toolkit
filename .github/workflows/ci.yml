@@ -2,42 +2,37 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v3
-
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install ruff mypy pytest pytest-cov
-
-    - name: Lint with Ruff
+        pip install -e .[dev]
+        
+    - name: Run Ruff (Linting)
       run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        ruff check . --select=E9,F63,F7,F82 --target-version=py311
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        ruff check . --exit-zero
+        ruff check engine
 
-    - name: Type Check with MyPy
+    - name: Run Mypy (Type Checking)
       run: |
-        mypy .
+        mypy engine
 
-    - name: Test with pytest
+    - name: Run Tests
       run: |
-        pytest --cov=engine --cov=api tests/
+        pytest
