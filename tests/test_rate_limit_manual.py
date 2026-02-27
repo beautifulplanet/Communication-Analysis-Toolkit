@@ -1,31 +1,21 @@
-"""Manual test: verify rate limiting returns 429."""
+"""Test: verify rate limiting returns 429."""
 from __future__ import annotations
 
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
+import pytest
 from fastapi.testclient import TestClient
+from requests.auth import HTTPBasicAuth
 
 from api.main import app
 
+AUTH = HTTPBasicAuth("admin", "changeme")
 client = TestClient(app)
 
 
 def test_rate_limiting() -> None:
     """Hit /api/cases 70 times — should get 429 before 70."""
-    print("Testing rate limit on /api/cases (limit: 60/min)...")
     for i in range(70):
-        response = client.get("/api/cases")
+        response = client.get("/api/cases", auth=AUTH)
         if response.status_code == 429:
-            print(f"SUCCESS: Hit rate limit at request {i + 1}")
             return
-        if response.status_code != 200:
-            print(f"ERROR: Unexpected status {response.status_code} at request {i + 1}")
-            return
-    print("FAILURE: Did not hit rate limit after 70 requests")
-
-
-if __name__ == "__main__":
-    test_rate_limiting()
+        assert response.status_code == 200, f"Unexpected {response.status_code} at request {i + 1}"
+    pytest.fail("Did not hit rate limit after 70 requests")

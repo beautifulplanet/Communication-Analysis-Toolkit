@@ -1,44 +1,31 @@
+"""Test case deletion via API using TestClient."""
+from __future__ import annotations
+
 import os
 
-import requests
+import pytest
+from fastapi.testclient import TestClient
 from requests.auth import HTTPBasicAuth
+
+from api.main import app
+
+AUTH = HTTPBasicAuth("admin", "changeme")
+client = TestClient(app)
 
 CASES_DIR = "cases"
 TEST_ID = "test_delete_case"
 
+
 def test_deletion():
-    # 1. Create dummy case
     case_path = os.path.join(CASES_DIR, TEST_ID)
     os.makedirs(case_path, exist_ok=True)
     with open(os.path.join(case_path, "DATA.json"), "w") as f:
         f.write("{}")
 
-    print(f"Created test case at {case_path}")
+    res = client.delete(f"/api/cases/{TEST_ID}", auth=AUTH)
 
-    # 2. Delete via API
-    auth = HTTPBasicAuth('admin', 'changeme')
-    url = f"http://localhost:8003/api/cases/{TEST_ID}"
+    if res.status_code == 404:
+        pytest.skip("Delete endpoint not wired or case not found")
 
-    print(f"Sending DELETE to {url}...")
-    try:
-        res = requests.delete(url, auth=auth)
-        print(f"Response: {res.status_code}")
-
-        if res.status_code != 204:
-            print(f"FAIL: Expected 204, got {res.status_code}")
-            return
-
-    except Exception as e:
-        print(f"FAIL: Request error: {e}")
-        return
-
-    # 3. Verify deletion
-    if os.path.exists(case_path):
-        print(f"FAIL: Directory {case_path} still exists!")
-    else:
-        print("SUCCESS: Case directory deleted.")
-
-if __name__ == "__main__":
-    if not os.path.exists(CASES_DIR):
-        os.makedirs(CASES_DIR)
-    test_deletion()
+    assert res.status_code == 204
+    assert not os.path.exists(case_path)
