@@ -83,7 +83,7 @@ Issues = "https://github.com/beautifulplanet/Communication-Analysis-Toolkit/issu
 # Setuptools — tell it where to find our packages
 # --------------------------------------------------------------------------
 [tool.setuptools.packages.find]
-include = ["engine*", "active*"]
+include = ["engine*", "api*", "active*"]
 exclude = ["tests*", "old_unused*", "build_tools*", "tools*"]
 
 # --------------------------------------------------------------------------
@@ -127,6 +127,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
 asyncio_mode = "auto"
+pythonpath = ["."]
 
 # --------------------------------------------------------------------------
 # Mypy — static type checking
