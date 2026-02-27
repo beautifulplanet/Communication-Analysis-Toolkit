@@ -48,7 +48,7 @@ uploads/
 tests/load_results/
 
 # Test case artifacts with local paths
-cases/flow-test-case/
+cases/flow-test-case*/
 
 # Utility scripts (not part of the project)
 check_syntax.py

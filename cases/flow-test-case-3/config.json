@@ -1,9 +1,0 @@
-{
-    "case_name": "Flow Test Case",
-    "user_label": "Me",
-    "contact_label": "You",
-    "sms_xml": "C:/Users/Elite/Documents/Mega Folder/9/Communication forensic tool/cases/flow-test-case-3/source_data/e3ba0561-271a-4f71-bfba-1b9780554ca4.xml",
-    "output_dir": "C:/Users/Elite/Documents/Mega Folder/9/Communication forensic tool/cases/flow-test-case-3/output",
-    "date_start": "1970-01-01",
-    "date_end": "2099-12-31"
-}
