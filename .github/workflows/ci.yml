@@ -49,4 +49,4 @@ jobs:
         pip install -e .
 
     - name: Run Tests
-      run: python -m pytest tests/ --tb=short -q -p no:cacheprovider
+      run: pytest --tb=short -q
