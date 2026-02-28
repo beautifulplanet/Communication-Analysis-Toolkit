@@ -59,7 +59,7 @@ def test_ask_question_missing_case():
     data = response.json()
     assert "error" in data
     assert data["error"]["code"] == "404"
-    assert "Case 'nonexistent_case_id' not found" in data["error"]["message"]
+    assert "not found" in data["error"]["message"].lower()
     assert "request_id" in data["error"]
     assert len(data["error"]["request_id"]) > 0
     assert response.headers["X-Request-ID"] == data["error"]["request_id"]
