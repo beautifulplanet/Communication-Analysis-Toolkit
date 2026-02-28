@@ -110,5 +110,6 @@ All in `test_agent_questions.py` and `test_flow.py`. These are documented planne
 ## pyproject.toml
 
 - `[tool.setuptools.packages.find]` must include `["engine*", "api*", "active*"]`
+- Every Python package directory MUST have `__init__.py` (e.g. `api/routers/__init__.py`). Without it, `pip install -e .` won't find subpackages and CI tests crash on import.
 - `authors` field: leave empty or use real name (no fake emails)
 - `project.urls`: must point to `beautifulplanet/Communication-Analysis-Toolkit`

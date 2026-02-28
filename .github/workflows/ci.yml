@@ -48,5 +48,15 @@ jobs:
         pip install -r requirements.txt
         pip install -e .
 
+    - name: Verify imports
+      run: |
+        python -c "from engine.patterns import detect_patterns; print('engine OK')"
+        python -c "from api.main import app; print('api OK')"
+        python -c "import pytest; print(f'pytest {pytest.__version__}')"
+        pip list | grep -i asyncio
+
+    - name: Test collection
+      run: python -m pytest --co -q 2>&1 | tail -5
+
     - name: Run Tests
-      run: python -m pytest tests/ --tb=short -q
+      run: python -m pytest tests/ --tb=long 2>&1 | tail -80
