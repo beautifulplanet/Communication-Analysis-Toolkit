@@ -48,8 +48,5 @@ jobs:
         pip install -r requirements.txt
         pip install -e .
 
-    - name: Verify collection
-      run: python -m pytest --co -q 2>&1 | tail -3
-
     - name: Run Tests
-      run: python -m pytest tests/ --tb=short -q -o asyncio_mode=strict
+      run: python -m pytest tests/ --tb=short -q

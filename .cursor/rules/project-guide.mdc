@@ -1,0 +1,114 @@
+---
+description: Communication Analysis Toolkit — project conventions, CI rules, and lessons learned for all contributors (AI or human)
+alwaysApply: true
+---
+
+# Communication Analysis Toolkit — Project Guide
+
+## Language Rules (CRITICAL)
+
+NEVER use these terms anywhere in code, docs, comments, or commit messages:
+- "clinical" → use "behavioral" or "research-informed"
+- "forensic" → use "analysis" or "behavioral pattern detection"
+- "stalkerware" → use "non-consensual monitoring"
+- "clinical-grade" → use "research-informed"
+- "forensic proof" → use "definitive proof"
+
+This is a portfolio project. Clinical/forensic language hurts employability.
+
+## Shell / PowerShell (Windows)
+
+- **No `&&`** — PowerShell doesn't support it. Use `;` or separate commands.
+- **No heredocs** (`<<'EOF'`) — Not valid in PowerShell. Use simple `-m "message"` for git commits.
+- **Use `working_directory` parameter** instead of `cd path &&` chains.
+- **Redirect stderr**: Use `2>&1` to capture all output.
+
+## Git Hygiene
+
+### Never commit:
+- `cases/flow-test-case*/` — test artifacts with local absolute paths
+- `uploads/` — ephemeral upload artifacts
+- `tests/load_results/` — generated locust output
+- `check_syntax.py` — throwaway utility
+- `.env` — has API keys (`.env.example` IS committed)
+- `build/`, `dist/`, `*.egg-info/` — build artifacts
+- Any file with hardcoded Windows paths (`C:\Users\...`)
+
+### Before `git add -A`:
+Always run `git status` first and verify no sensitive/test artifacts are staged.
+The `.gitignore` covers most cases but `git add -A` can surprise you.
+
+## CI / GitHub Actions
+
+### Why CI fails (lessons learned):
+
+1. **Missing `pip install -e .`** — The `engine` and `api` packages must be installed. `pip install -r requirements.txt` alone is not enough.
+2. **Missing `pythonpath = ["."]`** in pyproject.toml — Without this, pytest can't import `engine` or `api` modules in CI.
+3. **Known-failing tests must be `@pytest.mark.xfail`** — 17 tests are planned features that intentionally fail. Without `xfail`, pytest returns exit code 1 and CI fails.
+4. **`pysqlcipher3` requires native C libs** — Commented out in requirements.txt. Never uncomment for CI.
+5. **`pytest-asyncio` version mismatch** — Local has 1.x, CI might install 0.23.x. Use `>=0.23.0` (no upper bound). Don't set `asyncio_mode` in pyproject.toml — let the version default work. The one async test (`test_ai_connection.py`) uses `@pytest.mark.asyncio` explicitly.
+
+### CI install sequence:
+```
+pip install -r requirements.txt
+pip install -e .
+```
+
+### Before pushing, always run:
+```
+python -m pytest --tb=short -q        # expect: 693 pass, 16 skip, 17 xfail
+ruff check engine api                  # expect: 0 errors
+mypy engine api --ignore-missing-imports  # expect: 0 errors
+```
+
+## Testing Architecture
+
+### Test categories:
+- Pattern detection (5 files, 200+ tests) — pure regex, no fixtures needed
+- Agent questions (225 tests) — needs temp SQLite DB loaded from `cases/sample/output/DATA.json`
+- API tests — use `TestClient` (NOT `requests` to localhost). Always pass `auth=AUTH`.
+- Server-dependent tests are BANNED — convert to `TestClient`
+
+### Fixtures:
+- `AnalysisAgent` takes `(storage, case_id, user_name, contact_name)` — NOT a dict
+- Tests that need sample data must guard with `pytest.skip("...")` when data is missing
+- Use `tmp_path` for temporary databases in tests
+
+### Auth in API tests:
+```python
+from requests.auth import HTTPBasicAuth
+AUTH = HTTPBasicAuth("admin", "changeme")
+client.get("/api/cases", auth=AUTH)
+```
+
+### xfail tests (17 total):
+All in `test_agent_questions.py` and `test_flow.py`. These are documented planned features in the README roadmap. When you implement a feature, remove its `xfail` marker.
+
+## Static Analysis
+
+### ruff config (pyproject.toml):
+- Line length: 100
+- Target: Python 3.9
+- Rules: E, F, W, I, UP, B, SIM, PT, A, PIE, RET, SLF, RUF
+- FastAPI `Depends`/`File` defaults: suppress with `# noqa: B008`
+
+### mypy config:
+- Target: Python 3.9
+- `ignore_missing_imports = true`
+- Use `from __future__ import annotations` for union types
+- Use `Optional[X]` instead of `X | None` for Python 3.9 compat
+
+## Project Structure
+
+- `engine/` — Core analysis (patterns, parsers, storage, reporting)
+- `api/` — FastAPI backend (routes, agent, middleware, auth)
+- `dashboard/` — React/TypeScript frontend (read-only viewer)
+- `tests/` — 33 test files, 726 tests
+- `docs/` — ADRs, audit report, standalone part docs
+- `cases/` — Case data (gitignored except README)
+
+## pyproject.toml
+
+- `[tool.setuptools.packages.find]` must include `["engine*", "api*", "active*"]`
+- `authors` field: leave empty or use real name (no fake emails)
+- `project.urls`: must point to `beautifulplanet/Communication-Analysis-Toolkit`
