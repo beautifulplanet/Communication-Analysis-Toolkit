@@ -42,11 +42,12 @@ The `.gitignore` covers most cases but `git add -A` can surprise you.
 
 ### Why CI fails (lessons learned):
 
-1. **Missing `pip install -e .`** — The `engine` and `api` packages must be installed. `pip install -r requirements.txt` alone is not enough.
-2. **Missing `pythonpath = ["."]`** in pyproject.toml — Without this, pytest can't import `engine` or `api` modules in CI.
-3. **Known-failing tests must be `@pytest.mark.xfail`** — 17 tests are planned features that intentionally fail. Without `xfail`, pytest returns exit code 1 and CI fails.
-4. **`pysqlcipher3` requires native C libs** — Commented out in requirements.txt. Never uncomment for CI.
-5. **`pytest-asyncio` version mismatch** — Local has 1.x, CI might install 0.23.x. Use `>=0.23.0` (no upper bound). Don't set `asyncio_mode` in pyproject.toml — let the version default work. The one async test (`test_ai_connection.py`) uses `@pytest.mark.asyncio` explicitly.
+1. **Missing transitive dependencies** — FastAPI requires `python-multipart` for file uploads (`UploadFile`). Without it, every test that imports `api.main` crashes during collection with `RuntimeError: Form data requires "python-multipart"`. This was the root cause of 20+ failed CI runs. **Always run `pip check` after installing to catch missing deps.**
+2. **Missing `pip install -e .`** — The `engine` and `api` packages must be installed. `pip install -r requirements.txt` alone is not enough.
+3. **Missing `pythonpath = ["."]`** in pyproject.toml — Without this, pytest can't import `engine` or `api` modules in CI.
+4. **Known-failing tests must be `@pytest.mark.xfail`** — 17 tests are planned features that intentionally fail. Without `xfail`, pytest returns exit code 1 and CI fails.
+5. **`pysqlcipher3` requires native C libs** — Commented out in requirements.txt. Never uncomment for CI.
+6. **`pytest-asyncio` version mismatch** — Local has 1.x, CI might install 0.23.x. Use `>=0.23.0` (no upper bound). Don't set `asyncio_mode` in pyproject.toml — let the version default work. The one async test (`test_ai_connection.py`) uses `@pytest.mark.asyncio` explicitly.
 
 ### CI install sequence:
 ```
@@ -56,6 +57,7 @@ pip install -e .
 
 ### Before pushing, always run:
 ```
+pip check                              # expect: no broken requirements
 python -m pytest --tb=short -q        # expect: 693 pass, 16 skip, 17 xfail
 ruff check engine api                  # expect: 0 errors
 mypy engine api --ignore-missing-imports  # expect: 0 errors
