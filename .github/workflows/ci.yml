@@ -48,26 +48,5 @@ jobs:
         pip install -r requirements.txt
         pip install -e .
 
-    - name: Debug imports
-      run: |
-        python -c "from engine.patterns import detect_patterns; print('engine OK')" || true
-        python -c "from api.main import app; print('api OK')" || true
-        python -c "import pytest; print(f'pytest {pytest.__version__}')" || true
-        pip list 2>/dev/null | grep -iE "fastapi|starlette|slowapi|structlog|pydantic|httpx|uvicorn|cachetools|asyncio" || true
-
     - name: Run Tests
-      id: tests
-      continue-on-error: true
-      run: python -m pytest tests/ --tb=short -q
-
-    - name: Show test output
-      if: steps.tests.outcome == 'failure'
-      run: |
-        echo "Tests failed with outcome: ${{ steps.tests.outcome }}"
-        python -m pytest tests/ --tb=long -q 2>&1 | head -100 || true
-        echo "---"
-        python -m pytest tests/ --tb=long -q 2>&1 | tail -50 || true
-
-    - name: Fail if tests failed
-      if: steps.tests.outcome == 'failure'
-      run: exit 1
+      run: python -m pytest tests/ --tb=short -q -p no:cacheprovider
